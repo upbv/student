@@ -185,6 +185,8 @@ CREATE TABLE `ms_course` (
   `department_id` int(10) unsigned NOT NULL DEFAULT 0  COMMENT '开课院系ID',
   `semester`     varchar(20)  NOT NULL DEFAULT ''     COMMENT '学期 如2024-2025-1',
   `status`       tinyint(1)   NOT NULL DEFAULT 1      COMMENT '状态 1开课 0停开',
+  `is_open`      tinyint(1)   NOT NULL DEFAULT 0      COMMENT '开放选课 1开放 0关闭',
+  `max_num`      int(11)      NOT NULL DEFAULT 0      COMMENT '选课人数上限 0不限',
   `remark`       varchar(200) NOT NULL DEFAULT ''     COMMENT '课程简介',
   `create_time`  int(11)      NOT NULL DEFAULT 0      COMMENT '创建时间',
   `update_time`  int(11)      NOT NULL DEFAULT 0      COMMENT '更新时间',
@@ -388,7 +390,12 @@ INSERT INTO `ms_auth` (`id`,`pid`,`name`,`type`,`path`,`icon`,`sort`,`status`,`c
 (71,60,'新增资助',2,'aid/save','',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 (72,60,'删除资助',2,'aid/delete','',3,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 (73,61,'查看授课',2,'mycourse/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
-(74,62,'查看学生',2,'mystudents/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+(74,62,'查看学生',2,'mystudents/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(75,55,'选课中心',1,'myselect','layui-icon-cart-simple',0,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(76,75,'查看可选课程',2,'myselect/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(77,75,'在线选课',2,'myselect/save','',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(78,75,'在线退课',2,'myselect/delete','',3,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(79,13,'按班级选课',2,'select/batchClass','',4,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
 
 -- 账号角色关联
 INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3),(3,5);
@@ -396,7 +403,7 @@ INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3),(3,5);
 -- 角色权限关联: 超管拥有全部管理权限（学生服务与教师工作台为个人页面，仅授予对应角色）
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`)
 SELECT 1, id FROM `ms_auth`
-WHERE id NOT IN (55,56,57,58,61,62,63,64,65,66,73,74);
+WHERE id NOT IN (55,56,57,58,61,62,63,64,65,66,73,74,75,76,77,78);
 
 -- 教务管理员：学生、班级、院系、教师、课程、选课、成绩与日志
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
@@ -404,7 +411,7 @@ INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
 (2,9),(2,31),(2,32),(2,33),(2,10),(2,34),(2,35),(2,36),
 (2,11),(2,37),(2,38),(2,39),(2,12),(2,40),(2,41),(2,42),
 (2,13),(2,43),(2,44),(2,45),(2,14),(2,46),(2,47),(2,48),(2,49),
-(2,59),(2,67),(2,60),(2,70),(2,15),(2,50),(2,16),(2,52);
+(2,59),(2,67),(2,60),(2,70),(2,15),(2,50),(2,16),(2,52),(2,79);
 
 -- 教师：我的授课、我的学生、成绩录入
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
@@ -412,7 +419,7 @@ INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
 
 -- 学生：我的成绩、我的请假、我的资助
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
-(4,55),(4,56),(4,63),(4,57),(4,64),(4,65),(4,58),(4,66);
+(4,55),(4,75),(4,76),(4,77),(4,78),(4,56),(4,63),(4,57),(4,64),(4,65),(4,58),(4,66);
 
 -- 辅导员：学生事务（学生、班级、请假审批、资助、成绩与课程查看）
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
@@ -521,3 +528,7 @@ SELECT a.id, 4
 FROM `ms_admin` a
 LEFT JOIN `ms_admin_role` ar ON ar.admin_id = a.id AND ar.role_id = 4
 WHERE a.student_id > 0 AND ar.id IS NULL;
+
+-- 部分课程开放学生自主选课
+UPDATE `ms_course` SET `is_open`=1, `max_num`=20 WHERE `id` IN (1,2,3);
+UPDATE `ms_course` SET `is_open`=1, `max_num`=0 WHERE `id`=5;
