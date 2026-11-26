@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>请假管理</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">请假管理</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>学生管理</span><span class="sep">/</span><em>请假管理</em></span>
+    </div>
+
+    <div class="search-box">
+        <form class="layui-form" lay-filter="searchForm" id="searchForm">
+            <div class="layui-row">
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">关键字</label>
+                        <div class="layui-input-inline" style="width:170px;">
+                            <input type="text" name="keyword" placeholder="学号 / 姓名" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">类型</label>
+                        <div class="layui-input-inline" style="width:120px;">
+                            <select name="type">
+                                <option value="">全部</option>
+                                <option value="1">事假</option>
+                                <option value="2">病假</option>
+                                <option value="3">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-inline" style="width:120px;">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="0">待审批</option>
+                                <option value="1">已批准</option>
+                                <option value="2">已驳回</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="resetBtn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-box">
+        <table class="layui-table" lay-size="sm">
+            <thead>
+            <tr>
+                <th style="width:110px;">学号</th>
+                <th style="width:80px;">姓名</th>
+                <th style="width:140px;">班级</th>
+                <th style="width:60px;">类型</th>
+                <th style="width:190px;">起止日期</th>
+                <th style="width:60px;">天数</th>
+                <th>事由</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:150px;">审批人 / 时间</th>
+                <th style="width:150px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="dataPage" class="page-foot"></div>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer', 'laypage'], function () {
+    var form = layui.form, layer = layui.layer, laypage = layui.laypage, $ = layui.$;
+    var page = 1, limit = 15, rows = [];
+
+    var statusCls = {0: 'status-warn', 1: 'status-on', 2: 'status-off'};
+
+    function render(list, count) {
+        rows = list;
+        var html = '';
+        if (!list.length) {
+            html = '<tr><td colspan="10" class="empty-tip">暂无请假记录</td></tr>';
+        }
+        list.forEach(function (r) {
+            var ops = '';
+            if (r.status == 0) {
+                ops += '<a class="layui-btn layui-btn-xs" data-act="approve" data-id="' + r.id + '">批准</a>';
+                ops += '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="reject" data-id="' + r.id + '">驳回</a>';
+            }
+            ops += '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="delete" data-id="' + r.id + '">删除</a>';
+
+            html += '<tr>' +
+                '<td>' + r.student_no + '</td>' +
+                '<td>' + r.student_name + '</td>' +
+                '<td>' + (r.class_name || '-') + '</td>' +
+                '<td>' + r.type_text + '</td>' +
+                '<td>' + r.start_date + ' ~ ' + r.end_date + '</td>' +
+                '<td>' + r.days + '</td>' +
+                '<td>' + r.reason + '</td>' +
+                '<td><span class="status-dot ' + (statusCls[r.status] || '') + '"></span>' + r.status_text + '</td>' +
+                '<td>' + (r.approver ? r.approver + '<br><small style="color:#9C988F">' + r.approve_time_text + '</small>' : '-') + '</td>' +
+                '<td>' + ops + '</td>' +
+                '</tr>';
+        });
+        $('#tableBody').html(html);
+
+        laypage.render({
+            elem: 'dataPage', count: count, limit: limit, curr: page,
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
+            }
+        });
+    }
+
+    function loadData() {
+        $.get('/leave/list', $('#searchForm').serialize() + '&page=' + page + '&limit=' + limit, function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            render(res.data, res.count);
+        }, 'json');
+    }
+
+    form.on('submit(searchBtn)', function () { page = 1; loadData(); return false; });
+    $('#resetBtn').on('click', function () {
+        $('#searchForm')[0].reset(); form.render(null, 'searchForm'); page = 1; loadData();
+    });
+
+    $('#tableBody').on('click', 'a[data-act]', function () {
+        var act = $(this).data('act');
+        var id = $(this).data('id');
+        var row = rows.filter(function (d) { return d.id == id; })[0];
+        if (!row) { return; }
+
+        if (act === 'delete') {
+            layer.confirm('确定删除该请假记录吗？', function (index) {
+                layer.close(index);
+                $.post('/leave/delete', {id: id}, function (r) {
+                    layer.msg(r.msg, {icon: r.code === 1 ? 1 : 2});
+                    if (r.code === 1) { loadData(); }
+                }, 'json');
+            });
+            return;
+        }
+
+        var status = act === 'approve' ? 1 : 2;
+        layer.prompt({
+            title: (status === 1 ? '批准' : '驳回') + '「' + row.student_name + '」的' + row.type_text + '（可填写审批意见）',
+            formType: 2,
+            value: row.remark || ''
+        }, function (remark, idx) {
+            $.post('/leave/approve', {id: id, status: status, remark: remark}, function (r) {
+                layer.close(idx);
+                layer.msg(r.msg, {icon: r.code === 1 ? 1 : 2});
+                if (r.code === 1) { loadData(); }
+            }, 'json');
+        });
+    });
+
+    loadData();
+});
+</script>
+</body>
+</html>

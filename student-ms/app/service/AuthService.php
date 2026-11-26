@@ -105,6 +105,86 @@ class AuthService
     }
 
     /**
+     * 当前账号的角色标识集合
+     */
+    public static function roleCodes(): array
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $adminId = self::id();
+        if ($adminId < 1) {
+            return $cache = [];
+        }
+
+        $roleIds = \app\model\AdminRole::where('admin_id', $adminId)->column('role_id');
+        if (empty($roleIds)) {
+            return $cache = [];
+        }
+
+        return $cache = \app\model\Role::whereIn('id', $roleIds)->column('code');
+    }
+
+    /**
+     * 是否拥有指定角色
+     */
+    public static function hasRole(string $code): bool
+    {
+        return in_array($code, self::roleCodes(), true);
+    }
+
+    /**
+     * 当前账号的主要身份，用于选择工作台
+     */
+    public static function primaryRole(): string
+    {
+        $codes = self::roleCodes();
+        foreach (['admin', 'academic', 'counselor', 'teacher', 'student'] as $code) {
+            if (in_array($code, $codes, true)) {
+                return $code;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * 当前登录账号记录（含学生/教师绑定）
+     */
+    public static function profile(): array
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $adminId = self::id();
+        if ($adminId < 1) {
+            return $cache = [];
+        }
+
+        $admin = \app\model\Admin::find($adminId);
+        return $cache = $admin ? $admin->toArray() : [];
+    }
+
+    /**
+     * 学生账号绑定的学生ID
+     */
+    public static function studentId(): int
+    {
+        return (int) (self::profile()['student_id'] ?? 0);
+    }
+
+    /**
+     * 教师账号绑定的教师ID
+     */
+    public static function teacherId(): int
+    {
+        return (int) (self::profile()['teacher_id'] ?? 0);
+    }
+
+    /**
      * 校验密码
      */
     public static function verifyPassword(string $password, string $hash, string $salt): bool

@@ -5,6 +5,8 @@ namespace app\controller;
 use app\model\Admin;
 use app\model\AdminRole;
 use app\model\Role;
+use app\model\Student;
+use app\model\Teacher;
 use app\service\AuthService;
 use think\Request;
 
@@ -19,8 +21,10 @@ class AdminController
     public function index()
     {
         return view('admin/index', [
-            'title' => '学生管理系统 - 账号管理',
-            'roles' => Role::where('status', 1)->order('sort', 'asc')->select(),
+            'title'    => '学生管理系统 - 账号管理',
+            'roles'    => Role::where('status', 1)->order('sort', 'asc')->select(),
+            'students' => Student::order('student_no', 'asc')->select(),
+            'teachers' => Teacher::order('teacher_no', 'asc')->select(),
         ]);
     }
 
@@ -85,6 +89,8 @@ class AdminController
         $phone    = trim((string) $request->post('phone', ''));
         $sex      = (int) $request->post('sex', 0);
         $status   = (int) $request->post('status', 1);
+        $studentId = (int) $request->post('student_id', 0);
+        $teacherId = (int) $request->post('teacher_id', 0);
         $roleIds  = $request->post('role_ids', []);
         if (!is_array($roleIds)) {
             $roleIds = $roleIds === '' ? [] : explode(',', (string) $roleIds);
@@ -107,6 +113,13 @@ class AdminController
             return json(['code' => 0, 'msg' => '密码长度不能少于 6 位']);
         }
 
+        if ($studentId > 0 && !Student::find($studentId)) {
+            return json(['code' => 0, 'msg' => '关联的学生不存在']);
+        }
+        if ($teacherId > 0 && !Teacher::find($teacherId)) {
+            return json(['code' => 0, 'msg' => '关联的教师不存在']);
+        }
+
         // 账号唯一性校验
         $existQuery = Admin::where('username', $username);
         if ($id > 0) {
@@ -122,12 +135,14 @@ class AdminController
                 return json(['code' => 0, 'msg' => '账号不存在']);
             }
             $data = [
-                'username' => $username,
-                'nickname' => $nickname,
-                'email'    => $email,
-                'phone'    => $phone,
-                'sex'      => $sex,
-                'status'   => $status,
+                'username'   => $username,
+                'nickname'   => $nickname,
+                'email'      => $email,
+                'phone'      => $phone,
+                'sex'        => $sex,
+                'status'     => $status,
+                'student_id' => $studentId,
+                'teacher_id' => $teacherId,
             ];
             if ($password !== '') {
                 $data['password']   = AuthService::makePassword($password, $admin->salt);
@@ -138,14 +153,16 @@ class AdminController
         } else {
             $salt = substr(md5(uniqid((string) microtime(true), true)), 0, 8);
             $admin = Admin::create([
-                'username' => $username,
-                'nickname' => $nickname,
-                'password' => AuthService::makePassword($password, $salt),
-                'salt'     => $salt,
-                'email'    => $email,
-                'phone'    => $phone,
-                'sex'      => $sex,
-                'status'   => $status,
+                'username'   => $username,
+                'nickname'   => $nickname,
+                'password'   => AuthService::makePassword($password, $salt),
+                'salt'       => $salt,
+                'email'      => $email,
+                'phone'      => $phone,
+                'sex'        => $sex,
+                'status'     => $status,
+                'student_id' => $studentId,
+                'teacher_id' => $teacherId,
             ]);
             $action = '新增账号';
         }

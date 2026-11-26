@@ -19,6 +19,8 @@ CREATE TABLE `ms_admin` (
   `password`      char(32)     NOT NULL                COMMENT '密码(md5加盐)',
   `salt`          varchar(32) NOT NULL DEFAULT ''     COMMENT '密码盐值',
   `nickname`      varchar(30)  NOT NULL DEFAULT ''     COMMENT '姓名',
+  `student_id`    int(10) unsigned NOT NULL DEFAULT 0  COMMENT '关联学生ID（学生账号）',
+  `teacher_id`    int(10) unsigned NOT NULL DEFAULT 0  COMMENT '关联教师ID（教师账号）',
   `avatar`        varchar(120) NOT NULL DEFAULT ''     COMMENT '头像地址',
   `email`         varchar(60)  NOT NULL DEFAULT ''     COMMENT '邮箱',
   `phone`         varchar(20)  NOT NULL DEFAULT ''     COMMENT '联系电话',
@@ -214,6 +216,43 @@ CREATE TABLE `ms_select_course` (
 -- 系统日志
 -- ----------------------------------------------------------------------------
 
+-- 请假表
+DROP TABLE IF EXISTS `ms_leave`;
+CREATE TABLE `ms_leave` (
+  `id`          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `student_id`  int(10) unsigned NOT NULL DEFAULT 0    COMMENT '学生ID',
+  `type`        tinyint(1)   NOT NULL DEFAULT 1        COMMENT '类型 1事假 2病假 3其他',
+  `start_date`  date         NOT NULL                  COMMENT '开始日期',
+  `end_date`    date         NOT NULL                  COMMENT '结束日期',
+  `days`        decimal(4,1) NOT NULL DEFAULT 0        COMMENT '请假天数',
+  `reason`      varchar(500) NOT NULL DEFAULT ''       COMMENT '请假事由',
+  `status`      tinyint(1)   NOT NULL DEFAULT 0        COMMENT '状态 0待审批 1已批准 2已驳回',
+  `approver`    varchar(30)  NOT NULL DEFAULT ''       COMMENT '审批人',
+  `approve_time` int(11)     DEFAULT NULL              COMMENT '审批时间',
+  `remark`      varchar(200) NOT NULL DEFAULT ''       COMMENT '审批意见',
+  `create_time` int(11)      NOT NULL DEFAULT 0        COMMENT '创建时间',
+  `update_time` int(11)      NOT NULL DEFAULT 0        COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_student` (`student_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生请假表';
+
+-- 资助表
+DROP TABLE IF EXISTS `ms_aid`;
+CREATE TABLE `ms_aid` (
+  `id`          int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `student_id`  int(10) unsigned NOT NULL DEFAULT 0    COMMENT '学生ID',
+  `type`        tinyint(1)   NOT NULL DEFAULT 1        COMMENT '类型 1助学金 2奖学金 3困难补助 4勤工助学',
+  `semester`    varchar(20)  NOT NULL DEFAULT ''       COMMENT '学期',
+  `amount`      decimal(10,2) NOT NULL DEFAULT 0       COMMENT '金额',
+  `status`      tinyint(1)   NOT NULL DEFAULT 0        COMMENT '状态 0申请中 1已通过 2未通过',
+  `remark`      varchar(200) NOT NULL DEFAULT ''       COMMENT '备注',
+  `create_time` int(11)      NOT NULL DEFAULT 0        COMMENT '创建时间',
+  `update_time` int(11)      NOT NULL DEFAULT 0        COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_student` (`student_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学生资助表';
+
 -- 登录日志
 DROP TABLE IF EXISTS `ms_login_log`;
 CREATE TABLE `ms_login_log` (
@@ -257,16 +296,19 @@ CREATE TABLE `ms_operation_log` (
 -- ----------------------------------------------------------------------------
 
 -- 账号: 密码统一为 admin123 / teacher123 (md5(密码盐 + 明文))
-INSERT INTO `ms_admin` (`username`,`password`,`salt`,`nickname`,`email`,`sex`,`status`,`create_time`,`update_time`) VALUES
-('admin','d8ec77afa4256d2c3abd60a9e799faa9','sms8x2k','系统管理员','admin@student-ms.local',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
-('teacher','8cebe4b61ddaaa8b9d81435a95704f01','sms8x2k','毕柱兰','bzl@student-ms.local',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+INSERT INTO `ms_admin` (`username`,`password`,`salt`,`nickname`,`email`,`sex`,`status`,`student_id`,`teacher_id`,`create_time`,`update_time`) VALUES
+('admin','d8ec77afa4256d2c3abd60a9e799faa9','sms8x2k','系统管理员','admin@student-ms.local',1,1,0,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+('teacher','8cebe4b61ddaaa8b9d81435a95704f01','sms8x2k','毕柱兰','bzl@student-ms.local',2,1,0,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+('counselor','e5b7f550b652b014b48891e5c20e3bf3','sms8x2k','王辅导员','fdy@student-ms.local',2,1,0,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+('2400012811','60da0783ec9a5966ae1719f71349e386','sms8x2k','郭佳辰','gjc@student-ms.local',1,1,1,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
 
 -- 角色
 INSERT INTO `ms_role` (`name`,`code`,`remark`,`status`,`sort`,`create_time`,`update_time`) VALUES
 ('超级管理员','admin','拥有系统全部权限',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 ('教务管理员','academic','负责院系、班级、学生、课程与成绩管理',1,2,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 ('教师','teacher','负责所授课程成绩录入与查询',1,3,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
-('学生','student','查询本人学籍与成绩信息',1,4,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+('学生','student','查询本人学籍与成绩信息',1,4,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+('辅导员','counselor','负责学生日常事务：请假审批与资助管理',1,5,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
 
 -- 权限菜单 (type=1 菜单, type=2 操作按钮; path 对应路由路径)
 INSERT INTO `ms_auth` (`pid`,`name`,`type`,`path`,`icon`,`sort`,`status`,`create_time`,`update_time`) VALUES
@@ -327,15 +369,34 @@ INSERT INTO `ms_auth` (`pid`,`name`,`type`,`path`,`icon`,`sort`,`status`,`create
 (6,'分配权限',2,'role/assign','',4,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
 
 -- 账号角色关联
-INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3);
+INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3),(3,5),(4,4);
 
 -- 角色权限关联: 超管拥有全部权限
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`)
 SELECT 1, id FROM `ms_auth`;
 
--- 教师角色: 可查看学生、课程、选课、成绩，可录入成绩
+-- 教务管理员：学生、班级、院系、教师、课程、选课、成绩与日志
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
-(3,8),(3,12),(3,13),(3,14),(3,27),(3,40),(3,43),(3,46),(3,47),(3,48);
+(2,2),(2,3),(2,4),(2,8),(2,27),(2,28),(2,29),(2,30),
+(2,9),(2,31),(2,32),(2,33),(2,10),(2,34),(2,35),(2,36),
+(2,11),(2,37),(2,38),(2,39),(2,12),(2,40),(2,41),(2,42),
+(2,13),(2,43),(2,44),(2,45),(2,14),(2,46),(2,47),(2,48),(2,49),
+(2,59),(2,67),(2,60),(2,70),(2,15),(2,50),(2,16),(2,52);
+
+-- 教师：我的授课、我的学生、成绩录入
+INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
+(3,3),(3,61),(3,73),(3,62),(3,74),(3,14),(3,46),(3,47),(3,48),(3,49);
+
+-- 学生：我的成绩、我的请假、我的资助
+INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
+(4,55),(4,56),(4,63),(4,57),(4,64),(4,65),(4,58),(4,66);
+
+-- 辅导员：学生事务（学生、班级、请假审批、资助、成绩与课程查看）
+INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES
+(5,2),(5,3),(5,8),(5,27),(5,28),(5,30),(5,9),(5,31),
+(5,10),(5,34),(5,11),(5,37),(5,12),(5,40),(5,13),(5,43),
+(5,14),(5,46),(5,49),(5,59),(5,67),(5,68),(5,69),
+(5,60),(5,70),(5,71),(5,72);
 
 -- 院系
 INSERT INTO `ms_department` (`name`,`code`,`leader`,`sort`,`status`,`create_time`,`update_time`) VALUES
@@ -410,3 +471,17 @@ INSERT INTO `ms_select_course` (`student_id`,`course_id`,`semester`,`score`,`sta
 UPDATE `ms_class` c SET c.student_num = (
   SELECT COUNT(*) FROM `ms_student` s WHERE s.class_id = c.id AND s.delete_time IS NULL
 ) WHERE c.id IN (1,2,3);
+
+-- 请假示例数据
+INSERT INTO `ms_leave` (`student_id`,`type`,`start_date`,`end_date`,`days`,`reason`,`status`,`approver`,`approve_time`,`remark`,`create_time`,`update_time`) VALUES
+(1,2,'2026-11-18','2026-11-19',2.0,'感冒发烧，需居家休息','1','王辅导员',UNIX_TIMESTAMP(),'注意休息，返校后补交病假条',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(1,1,'2026-12-02','2026-12-02',1.0,'家中有事需回家处理','0','',NULL,'',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(2,1,'2026-12-03','2026-12-04',2.0,'参加家庭婚礼','0','',NULL,'',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(3,3,'2026-11-20','2026-11-20',1.0,'参加校外竞赛','1','王辅导员',UNIX_TIMESTAMP(),'准假，注意安全',UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+
+-- 资助示例数据
+INSERT INTO `ms_aid` (`student_id`,`type`,`semester`,`amount`,`status`,`remark`,`create_time`,`update_time`) VALUES
+(1,1,'2026-2027-1',2000.00,1,'国家助学金一等',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(1,2,'2026-2027-1',1000.00,0,'学院奖学金申请中',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(2,3,'2026-2027-1',800.00,0,'临时困难补助申请',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(3,2,'2025-2026-2',1500.00,1,'校级奖学金',UNIX_TIMESTAMP(),UNIX_TIMESTAMP());

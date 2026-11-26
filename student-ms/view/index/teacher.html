@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>教学主页</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">教学主页</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><em>教师工作台</em></span>
+    </div>
+
+    <div class="table-box" style="margin-bottom:10px;padding:16px 18px;">
+        <div class="my-profile">
+            <span class="user-avatar" id="tAvatar">-</span>
+            <div class="my-profile-text">
+                <div class="name"><span id="tName">-</span><small id="tTitle"></small></div>
+                <div class="meta">所属院系 <b id="tDept">-</b>　·　当前为教师工作台，仅展示您所授课程与相关学生</div>
+            </div>
+            <a class="layui-btn layui-btn-sm layui-btn-normal" href="javascript:;" data-open="/score">成绩录入</a>
+        </div>
+    </div>
+
+    <div class="panel-grid">
+        <div class="panel-card">
+            <div class="num" id="statCourse">-</div>
+            <div class="label">授课门数</div>
+        </div>
+        <div class="panel-card">
+            <div class="num" id="statStudent">-</div>
+            <div class="label">授课学生</div>
+        </div>
+        <div class="panel-card">
+            <div class="num" id="statUngraded">-</div>
+            <div class="label">待录入成绩</div>
+        </div>
+        <div class="panel-card">
+            <div class="num" id="statAvg">-</div>
+            <div class="label">课程平均分</div>
+        </div>
+    </div>
+
+    <div class="layui-row layui-col-space8">
+        <div class="layui-col-md7">
+            <div class="table-box">
+                <div class="panel-title">
+                    <span>我的授课</span>
+                    <span class="more" data-open="/mycourse">课程详情 &gt;</span>
+                </div>
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                    <tr>
+                        <th>课程名称</th>
+                        <th style="width:110px;">学期</th>
+                        <th style="width:70px;">人数</th>
+                        <th style="width:80px;">待录</th>
+                        <th style="width:80px;">平均分</th>
+                    </tr>
+                    </thead>
+                    <tbody id="courseBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="layui-col-md5">
+            <div class="table-box">
+                <div class="panel-title">
+                    <span>我的学生</span>
+                    <span class="more" data-open="/mystudents">全部学生 &gt;</span>
+                </div>
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                    <tr>
+                        <th>学号</th>
+                        <th style="width:80px;">姓名</th>
+                        <th>班级</th>
+                    </tr>
+                    </thead>
+                    <tbody id="studentBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['layer'], function () {
+    var layer = layui.layer, $ = layui.$;
+
+    $('[data-open]').on('click', function () {
+        var url = $(this).data('open');
+        if (window.parent && window.parent !== window && window.parent.appOpenTab) {
+            window.parent.appOpenTab(url, $(this).text().replace(/\s*>$/, '').trim());
+        } else {
+            window.location.href = url;
+        }
+    });
+
+    $.get('/dashboard/teacher', function (res) {
+        if (res.code !== 1) { layer.msg('数据加载失败', {icon: 2}); return; }
+        var d = res.data, p = d.profile, s = d.stats;
+
+        $('#tAvatar').text((p.name || '师').charAt(0));
+        $('#tName').text(p.name || '-');
+        $('#tTitle').text(p.title ? '（' + p.title + '）' : '');
+        $('#tDept').text(p.department || '-');
+
+        $('#statCourse').text(s.courseCount);
+        $('#statStudent').text(s.studentCount);
+        $('#statUngraded').text(s.ungradedTotal);
+        $('#statAvg').text(s.avgScore);
+
+        var cHtml = '';
+        d.courses.forEach(function (c) {
+            cHtml += '<tr>' +
+                '<td>' + c.name + '</td>' +
+                '<td>' + c.semester + '</td>' +
+                '<td>' + c.student_count + '</td>' +
+                '<td>' + (c.ungraded > 0 ? '<b style="color:#8A6D3B">' + c.ungraded + '</b>' : '0') + '</td>' +
+                '<td>' + c.avg_score + '</td>' +
+                '</tr>';
+        });
+        $('#courseBody').html(cHtml || '<tr><td colspan="5" class="empty-tip">暂无授课记录</td></tr>');
+
+        var sHtml = '';
+        d.students.forEach(function (stu) {
+            sHtml += '<tr>' +
+                '<td>' + stu.student_no + '</td>' +
+                '<td>' + stu.name + '</td>' +
+                '<td>' + stu.class_name + '</td>' +
+                '</tr>';
+        });
+        $('#studentBody').html(sHtml || '<tr><td colspan="3" class="empty-tip">暂无学生</td></tr>');
+    }, 'json');
+});
+</script>
+</body>
+</html>

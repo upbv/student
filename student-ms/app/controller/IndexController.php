@@ -11,13 +11,22 @@ use think\Request;
 class IndexController
 {
     /**
-     * 控制台内容页（供后台框架内嵌加载）
+     * 控制台内容页：按登录角色选择不同的工作台
      */
     public function index()
     {
-        return view('index/home', [
-            'title' => '学生管理系统 - 控制台',
-        ]);
+        $title = '学生管理系统 - 控制台';
+
+        switch (AuthService::primaryRole()) {
+            case 'student':
+                return view('index/student', ['title' => $title]);
+            case 'teacher':
+                return view('index/teacher', ['title' => $title]);
+            case 'counselor':
+                return view('index/counselor', ['title' => $title]);
+            default:
+                return view('index/home', ['title' => $title]);
+        }
     }
 
     /**
@@ -188,5 +197,246 @@ class IndexController
 
 
         return json(['code' => 1, 'msg' => '密码修改成功']);
+    }
+
+    /* ==================== 角色工作台数据 ==================== */
+
+    /**
+     * 学生面板：我的课程、成绩、请假与资助概览
+     */
+    public function studentPanel()
+    {
+        $studentId = AuthService::studentId();
+        if ($studentId < 1) {
+            return json(['code' => 1, 'data' => [
+                'profile' => [], 'stats' => [], 'grades' => [], 'leaves' => [], 'aids' => [],
+            ]]);
+        }
+
+        $student = \app\model\Student::find($studentId);
+        $class   = $student ? \app\model\SchoolClass::find($student->class_id) : null;
+
+        $records = \app\model\SelectCourse::alias('sc')
+            ->join('ms_course c', 'c.id = sc.course_id')
+            ->leftJoin('ms_teacher t', 't.id = c.teacher_id')
+            ->where('sc.student_id', $studentId)
+            ->field('sc.id, sc.semester, sc.score, sc.status, c.name AS course_name,
+                     c.credit, t.name AS teacher_name')
+            ->order('sc.id', 'asc')
+            ->select();
+
+        $grades = [];
+        $credits = 0.0;
+        $sum = 0.0;
+        $scored = 0;
+        $selected = 0;
+        foreach ($records as $item) {
+            if ($item->status != 1) {
+                continue;
+            }
+            $selected++;
+            $credits += (float) $item->credit;
+            if ($item->score !== null) {
+                $sum += (float) $item->score;
+                $scored++;
+            }
+            $grades[] = [
+                'course_name'  => $item->course_name,
+                'credit'       => $item->credit,
+                'teacher_name' => $item->teacher_name,
+                'semester'     => $item->semester,
+                'score'        => $item->score,
+            ];
+        }
+
+        $leaves = [];
+        foreach (\app\model\Leave::where('student_id', $studentId)->order('id', 'desc')->limit(5)->select() as $l) {
+            $leaves[] = [
+                'type_text'   => $l->type_text,
+                'start_date'  => $l->start_date,
+                'end_date'    => $l->end_date,
+                'days'        => $l->days,
+                'status'      => (int) $l->status,
+                'status_text' => $l->status_text,
+            ];
+        }
+
+        $aids = [];
+        foreach (\app\model\Aid::where('student_id', $studentId)->order('id', 'desc')->limit(5)->select() as $a) {
+            $aids[] = [
+                'type_text'   => $a->type_text,
+                'semester'    => $a->semester,
+                'amount'      => $a->amount,
+                'status'      => (int) $a->status,
+                'status_text' => $a->status_text,
+            ];
+        }
+
+        $leavePending = \app\model\Leave::where('student_id', $studentId)->where('status', 0)->count();
+
+        return json(['code' => 1, 'data' => [
+            'profile' => [
+                'name'        => $student->name ?? '',
+                'student_no'  => $student->student_no ?? '',
+                'class_name'  => $class->name ?? '未分班',
+                'status_text' => $student ? $student->status_text : '',
+                'phone'       => $student->phone ?? '',
+            ],
+            'stats' => [
+                'courseCount'  => $selected,
+                'creditTotal'  => round($credits, 1),
+                'avgScore'     => $scored ? round($sum / $scored, 1) : '-',
+                'leavePending' => $leavePending,
+                'aidCount'     => \app\model\Aid::where('student_id', $studentId)->count(),
+            ],
+            'grades' => $grades,
+            'leaves' => $leaves,
+            'aids'   => $aids,
+        ]]);
+    }
+
+    /**
+     * 教师面板：我的授课与我的学生
+     */
+    public function teacherPanel()
+    {
+        $teacherId = AuthService::teacherId();
+        if ($teacherId < 1) {
+            return json(['code' => 1, 'data' => [
+                'profile' => [], 'stats' => [], 'courses' => [], 'students' => [],
+            ]]);
+        }
+
+        $teacher = \app\model\Teacher::find($teacherId);
+        $dept    = $teacher ? \app\model\Department::find($teacher->department_id) : null;
+
+        $courses = [];
+        $studentIds = [];
+        $ungradedTotal = 0;
+        $scoreSum = 0.0;
+        $scoreCount = 0;
+
+        $courseList = \app\model\Course::where('teacher_id', $teacherId)->order('id', 'asc')->select();
+        foreach ($courseList as $course) {
+            $recordQuery = \app\model\SelectCourse::where('course_id', $course->id)->where('status', 1);
+            $count    = (clone $recordQuery)->count();
+            $ungraded = (clone $recordQuery)->whereNull('score')->count();
+            $avg      = (clone $recordQuery)->whereNotNull('score')->avg('score');
+            $ungradedTotal += $ungraded;
+            if ($avg !== null) {
+                $scoreSum += (float) $avg;
+                $scoreCount++;
+            }
+            foreach ((clone $recordQuery)->column('student_id') as $sid) {
+                $studentIds[$sid] = true;
+            }
+
+            $courses[] = [
+                'name'           => $course->name,
+                'course_no'      => $course->course_no,
+                'semester'       => $course->semester,
+                'student_count'  => $count,
+                'ungraded'       => $ungraded,
+                'avg_score'      => $avg === null ? '-' : round((float) $avg, 1),
+            ];
+        }
+
+        $students = [];
+        $classMap = \app\model\SchoolClass::column('name', 'id');
+        if ($studentIds) {
+            foreach (\app\model\Student::whereIn('id', array_keys($studentIds))->order('student_no', 'asc')->limit(8)->select() as $stu) {
+                $students[] = [
+                    'student_no' => $stu->student_no,
+                    'name'       => $stu->name,
+                    'class_name' => $classMap[$stu->class_id] ?? '未分班',
+                    'phone'      => $stu->phone,
+                ];
+            }
+        }
+
+        return json(['code' => 1, 'data' => [
+            'profile' => [
+                'name'       => $teacher->name ?? '',
+                'title'      => $teacher->title ?? '',
+                'department' => $dept->name ?? '',
+            ],
+            'stats' => [
+                'courseCount'   => count($courses),
+                'studentCount'  => count($studentIds),
+                'ungradedTotal' => $ungradedTotal,
+                'avgScore'      => $scoreCount ? round($scoreSum / $scoreCount, 1) : '-',
+            ],
+            'courses'  => $courses,
+            'students' => $students,
+        ]]);
+    }
+
+    /**
+     * 辅导员面板：学生事务概览与待审批请假
+     */
+    public function counselorPanel()
+    {
+        $studentCount = \app\model\Student::count();
+        $classCount   = \app\model\SchoolClass::count();
+        $leavePending = \app\model\Leave::where('status', 0)->count();
+        $leaveTotal   = \app\model\Leave::count();
+        $aidPending   = \app\model\Aid::where('status', 0)->count();
+        $aidAmount    = (float) \app\model\Aid::where('status', 1)->sum('amount');
+
+        $pendingLeaves = [];
+        $rows = \app\model\Leave::alias('l')
+            ->join('ms_student s', 's.id = l.student_id')
+            ->leftJoin('ms_class c', 'c.id = s.class_id')
+            ->where('l.status', 0)
+            ->field('l.id, l.type, l.start_date, l.end_date, l.days, l.reason,
+                     s.student_no, s.name AS student_name, c.name AS class_name')
+            ->order('l.id', 'asc')
+            ->limit(6)
+            ->select();
+        foreach ($rows as $r) {
+            $pendingLeaves[] = [
+                'id'           => $r->id,
+                'type_text'    => $r->type == 1 ? '事假' : ($r->type == 2 ? '病假' : '其他'),
+                'student_name' => $r->student_name,
+                'student_no'   => $r->student_no,
+                'class_name'   => $r->class_name,
+                'start_date'   => $r->start_date,
+                'end_date'     => $r->end_date,
+                'days'         => $r->days,
+                'reason'       => $r->reason,
+            ];
+        }
+
+        $recentAids = [];
+        $rows = \app\model\Aid::alias('a')
+            ->join('ms_student s', 's.id = a.student_id')
+            ->field('a.id, a.type, a.semester, a.amount, a.status, s.name AS student_name, s.student_no')
+            ->order('a.id', 'desc')
+            ->limit(6)
+            ->select();
+        foreach ($rows as $r) {
+            $recentAids[] = [
+                'type_text'    => $r->type == 1 ? '助学金' : ($r->type == 2 ? '奖学金' : ($r->type == 3 ? '困难补助' : '勤工助学')),
+                'student_name' => $r->student_name,
+                'student_no'   => $r->student_no,
+                'semester'     => $r->semester,
+                'amount'       => $r->amount,
+                'status'       => (int) $r->status,
+                'status_text'  => $r->status == 1 ? '已通过' : ($r->status == 2 ? '未通过' : '申请中'),
+            ];
+        }
+
+        return json(['code' => 1, 'data' => [
+            'stats' => [
+                'student'      => $studentCount,
+                'class'        => $classCount,
+                'leavePending' => $leavePending,
+                'leaveTotal'   => $leaveTotal,
+                'aidPending'   => $aidPending,
+                'aidAmount'    => round($aidAmount, 2),
+            ],
+            'pendingLeaves' => $pendingLeaves,
+            'recentAids'    => $recentAids,
+        ]]);
     }
 }

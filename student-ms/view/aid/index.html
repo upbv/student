@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>资助管理</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">资助管理</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>学生管理</span><span class="sep">/</span><em>资助管理</em></span>
+    </div>
+
+    <div class="search-box">
+        <form class="layui-form" lay-filter="searchForm" id="searchForm">
+            <div class="layui-row">
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">关键字</label>
+                        <div class="layui-input-inline" style="width:170px;">
+                            <input type="text" name="keyword" placeholder="学号 / 姓名" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">类型</label>
+                        <div class="layui-input-inline" style="width:130px;">
+                            <select name="type">
+                                <option value="">全部</option>
+                                <option value="1">助学金</option>
+                                <option value="2">奖学金</option>
+                                <option value="3">困难补助</option>
+                                <option value="4">勤工助学</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-inline" style="width:120px;">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="0">申请中</option>
+                                <option value="1">已通过</option>
+                                <option value="2">未通过</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md3">
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="resetBtn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <button class="layui-btn layui-btn-sm" id="btnAdd"><i class="layui-icon layui-icon-add-1"></i> 新增资助</button>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:110px;">学号</th>
+                <th style="width:80px;">姓名</th>
+                <th style="width:140px;">班级</th>
+                <th style="width:90px;">类型</th>
+                <th style="width:110px;">学期</th>
+                <th style="width:90px;">金额（元）</th>
+                <th style="width:80px;">状态</th>
+                <th>备注</th>
+                <th style="width:110px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="dataPage" class="page-foot"></div>
+    </div>
+</div>
+
+<script type="text/html" id="editLayer">
+    <form class="layui-form" id="editForm" lay-filter="editForm">
+        <input type="hidden" name="id" id="fieldId">
+        <div class="layui-form-item">
+            <label class="layui-form-label">学生</label>
+            <div class="layui-input-block">
+                <select name="student_id" id="studentSelect" lay-search lay-verify="required" lay-required>
+                    <option value="">请选择学生</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">资助类型</label>
+                    <div class="layui-input-block">
+                        <select name="type">
+                            <option value="1">助学金</option>
+                            <option value="2">奖学金</option>
+                            <option value="3">困难补助</option>
+                            <option value="4">勤工助学</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">学期</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="semester" class="layui-input" placeholder="如 2026-2027-1" lay-verify="required" lay-required>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">金额</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="amount" class="layui-input" value="0" min="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">状态</label>
+                    <div class="layui-input-block">
+                        <select name="status">
+                            <option value="0">申请中</option>
+                            <option value="1">已通过</option>
+                            <option value="2">未通过</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">备注</label>
+                    <div class="layui-input-block">
+                        <textarea name="remark" class="layui-textarea" style="height:70px;" placeholder="选填"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="submitEdit">保存</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="cancelEdit">取消</button>
+            </div>
+        </div>
+    </form>
+</script>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer', 'laypage'], function () {
+    var form = layui.form, layer = layui.layer, laypage = layui.laypage, $ = layui.$;
+    var page = 1, limit = 15, rows = [];
+
+    var statusCls = {0: 'status-warn', 1: 'status-on', 2: 'status-off'};
+
+    function render(list, count) {
+        rows = list;
+        var html = '';
+        if (!list.length) {
+            html = '<tr><td colspan="9" class="empty-tip">暂无资助记录</td></tr>';
+        }
+        list.forEach(function (r) {
+            html += '<tr>' +
+                '<td>' + r.student_no + '</td>' +
+                '<td>' + r.student_name + '</td>' +
+                '<td>' + (r.class_name || '-') + '</td>' +
+                '<td>' + r.type_text + '</td>' +
+                '<td>' + r.semester + '</td>' +
+                '<td>' + r.amount + '</td>' +
+                '<td><span class="status-dot ' + (statusCls[r.status] || '') + '"></span>' + r.status_text + '</td>' +
+                '<td>' + (r.remark || '-') + '</td>' +
+                '<td>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-warm" data-act="edit" data-id="' + r.id + '">编辑</a>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="delete" data-id="' + r.id + '">删除</a>' +
+                '</td></tr>';
+        });
+        $('#tableBody').html(html);
+
+        laypage.render({
+            elem: 'dataPage', count: count, limit: limit, curr: page,
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
+            }
+        });
+    }
+
+    function loadData() {
+        $.get('/aid/list', $('#searchForm').serialize() + '&page=' + page + '&limit=' + limit, function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            render(res.data, res.count);
+        }, 'json');
+    }
+
+    function loadStudents(callback) {
+        $.get('/student/options', {keyword: ''}, function (res) {
+            var html = '<option value="">请选择学生</option>';
+            if (res.code === 1) {
+                res.data.forEach(function (s) {
+                    html += '<option value="' + s.id + '">' + s.label + '</option>';
+                });
+            }
+            $('#studentSelect').html(html);
+            form.render('select');
+            if (callback) { callback(); }
+        }, 'json');
+    }
+
+    form.on('submit(searchBtn)', function () { page = 1; loadData(); return false; });
+    $('#resetBtn').on('click', function () {
+        $('#searchForm')[0].reset(); form.render(null, 'searchForm'); page = 1; loadData();
+    });
+
+    $('#btnAdd').on('click', function () {
+        layer.open({
+            type: 1, title: '新增资助', content: $('#editLayer').html(), area: ['680px', '520px'],
+            success: function () {
+                form.render(null, 'editForm');
+                loadStudents();
+            }
+        });
+    });
+
+    $('#tableBody').on('click', 'a[data-act]', function () {
+        var act = $(this).data('act');
+        var id = $(this).data('id');
+        var row = rows.filter(function (d) { return d.id == id; })[0];
+        if (!row) { return; }
+
+        if (act === 'delete') {
+            layer.confirm('确定删除该资助记录吗？', function (index) {
+                layer.close(index);
+                $.post('/aid/delete', {id: id}, function (r) {
+                    layer.msg(r.msg, {icon: r.code === 1 ? 1 : 2});
+                    if (r.code === 1) { loadData(); }
+                }, 'json');
+            });
+            return;
+        }
+
+        if (act === 'edit') {
+            layer.open({
+                type: 1, title: '编辑资助', content: $('#editLayer').html(), area: ['680px', '520px'],
+                success: function () {
+                    form.render(null, 'editForm');
+                    $('#fieldId').val(row.id);
+                    $('#editForm [name=type]').val(row.type);
+                    $('#editForm [name=semester]').val(row.semester);
+                    $('#editForm [name=amount]').val(row.amount);
+                    $('#editForm [name=status]').val(row.status);
+                    $('#editForm [name=remark]').val(row.remark);
+                    loadStudents(function () {
+                        $('#studentSelect').val(row.student_id);
+                        form.render('select');
+                    });
+                }
+            });
+        }
+    });
+
+    form.on('submit(submitEdit)', function (data) {
+        var index = layer.load(2);
+        $.post('/aid/save', data.field, function (res) {
+            layer.close(index);
+            if (res.code === 1) {
+                layer.msg(res.msg, {icon: 1});
+                setTimeout(function () { layer.closeAll(); loadData(); }, 500);
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+        return false;
+    });
+
+    $(document).on('click', '#cancelEdit', function () { layer.closeAll(); });
+
+    loadData();
+});
+</script>
+</body>
+</html>

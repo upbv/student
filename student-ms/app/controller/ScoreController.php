@@ -14,13 +14,35 @@ use think\Request;
 class ScoreController
 {
     /**
+     * 教师账号只能操作本人所授课程；管理员、教务与辅导员不受限
+     */
+    protected function scopedTeacherId(): int
+    {
+        if (!\app\service\AuthService::hasRole('teacher')) {
+            return 0;
+        }
+        foreach (['admin', 'academic', 'counselor'] as $code) {
+            if (\app\service\AuthService::hasRole($code)) {
+                return 0;
+            }
+        }
+        return \app\service\AuthService::teacherId();
+    }
+
+    /**
      * 成绩管理页
      */
     public function index()
     {
+        $teacherId = $this->scopedTeacherId();
+        $query = Course::order('id', 'asc');
+        if ($teacherId > 0) {
+            $query->where('teacher_id', $teacherId);
+        }
+
         return view('score/index', [
             'title'   => '学生管理系统 - 成绩管理',
-            'courses' => Course::order('id', 'asc')->select(),
+            'courses' => $query->select(),
         ]);
     }
 
@@ -43,6 +65,11 @@ class ScoreController
                      s.student_no, s.name AS student_name, s.class_id, c.name AS course_name, c.credit')
             ->where('sc.status', 1)
             ->order('sc.id', 'asc');
+
+        $teacherId = $this->scopedTeacherId();
+        if ($teacherId > 0) {
+            $query->where('c.teacher_id', $teacherId);
+        }
 
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {
@@ -100,6 +127,11 @@ class ScoreController
             return json(['code' => 0, 'msg' => '选课记录不存在']);
         }
 
+        $teacherId = $this->scopedTeacherId();
+        if ($teacherId > 0 && (int) Course::where('id', $record->course_id)->value('teacher_id') !== $teacherId) {
+            return json(['code' => 0, 'msg' => '只能录入本人所授课程的成绩']);
+        }
+
         if ($score === '') {
             $record->save(['score' => null]);
             $action = '清空成绩';
@@ -134,6 +166,11 @@ class ScoreController
         }
         if (!is_array($scores) || empty($scores)) {
             return json(['code' => 0, 'msg' => '没有需要保存的成绩数据']);
+        }
+
+        $teacherId = $this->scopedTeacherId();
+        if ($teacherId > 0 && (int) Course::where('id', $courseId)->value('teacher_id') !== $teacherId) {
+            return json(['code' => 0, 'msg' => '只能录入本人所授课程的成绩']);
         }
 
         // 取出该课程下所有选课记录，按学号建立索引
@@ -214,6 +251,11 @@ class ScoreController
                      MIN(sc.score) AS min_score')
             ->group('c.id, c.name, c.credit')
             ->order('c.id', 'asc');
+
+        $teacherId = $this->scopedTeacherId();
+        if ($teacherId > 0) {
+            $query->where('c.teacher_id', $teacherId);
+        }
 
         if ($semester !== '') {
             $query->where('sc.semester', $semester);

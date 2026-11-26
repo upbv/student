@@ -34,6 +34,9 @@ Route::get('login/menus', 'login/menus')->name('login_menus');
 // ---------------------------------------------------------------------------
 Route::get('dashboard', 'index/index')->name('dashboard');
 Route::get('dashboard/data', 'index/dashboard')->name('dashboard_data');
+Route::get('dashboard/student', 'index/studentPanel')->name('dashboard_student');
+Route::get('dashboard/teacher', 'index/teacherPanel')->name('dashboard_teacher');
+Route::get('dashboard/counselor', 'index/counselorPanel')->name('dashboard_counselor');
 Route::get('profile', 'index/profile')->name('profile');
 Route::post('profile/save', 'index/saveProfile')->name('profile_save');
 Route::post('profile/password', 'index/changePassword')->name('profile_password');
@@ -107,6 +110,41 @@ Route::get('score/list', 'score/lists')->name('score_list');
 Route::get('score/statistics', 'score/statistics')->name('score_statistics');
 Route::post('score/save', 'score/save')->name('score_save');
 Route::post('score/batch', 'score/batchSave')->name('score_batch');
+
+// ---------------------------------------------------------------------------
+// 日志
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// 请假与资助
+// ---------------------------------------------------------------------------
+Route::get('leave', 'leave/index')->name('leave_page');
+Route::get('leave/list', 'leave/lists')->name('leave_list');
+Route::post('leave/approve', 'leave/approve')->name('leave_approve');
+Route::post('leave/delete', 'leave/delete')->name('leave_delete');
+
+Route::get('aid', 'aid/index')->name('aid_page');
+Route::get('aid/list', 'aid/lists')->name('aid_list');
+Route::post('aid/save', 'aid/save')->name('aid_save');
+Route::post('aid/delete', 'aid/delete')->name('aid_delete');
+
+// ---------------------------------------------------------------------------
+// 学生自助
+// ---------------------------------------------------------------------------
+Route::get('mygrade', 'my/grade')->name('mygrade_page');
+Route::get('mygrade/list', 'my/gradeList')->name('mygrade_list');
+Route::get('myleave', 'my/leave')->name('myleave_page');
+Route::get('myleave/list', 'my/leaveList')->name('myleave_list');
+Route::post('myleave/save', 'my/leaveSave')->name('myleave_save');
+Route::get('myaid', 'my/aid')->name('myaid_page');
+Route::get('myaid/list', 'my/aidList')->name('myaid_list');
+
+// ---------------------------------------------------------------------------
+// 教师工作台
+// ---------------------------------------------------------------------------
+Route::get('mycourse', 'teaching/courses')->name('mycourse_page');
+Route::get('mycourse/list', 'teaching/courseList')->name('mycourse_list');
+Route::get('mystudents', 'teaching/students')->name('mystudents_page');
+Route::get('mystudents/list', 'teaching/studentList')->name('mystudents_list');
 
 // ---------------------------------------------------------------------------
 // 日志

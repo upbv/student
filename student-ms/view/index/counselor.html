@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>学生事务主页</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">学生事务主页</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><em>辅导员工作台</em></span>
+    </div>
+
+    <div class="panel-grid">
+        <div class="panel-card link" data-open="/student">
+            <div class="num" id="statStudent">-</div>
+            <div class="label">在册学生</div>
+        </div>
+        <div class="panel-card link" data-open="/class">
+            <div class="num" id="statClass">-</div>
+            <div class="label">班级</div>
+        </div>
+        <div class="panel-card link" data-open="/leave">
+            <div class="num" id="statLeave">-</div>
+            <div class="label">待审批请假</div>
+        </div>
+        <div class="panel-card link" data-open="/aid">
+            <div class="num" id="statAid">-</div>
+            <div class="label">资助申请中</div>
+        </div>
+        <div class="panel-card">
+            <div class="num" id="statAmount">-</div>
+            <div class="label">已发放资助（元）</div>
+        </div>
+    </div>
+
+    <div class="table-box" style="margin-bottom:10px;">
+        <div class="panel-title">
+            <span>待审批请假</span>
+            <span class="more" data-open="/leave">请假管理 &gt;</span>
+        </div>
+        <table class="layui-table" lay-size="sm">
+            <thead>
+            <tr>
+                <th style="width:110px;">学号</th>
+                <th style="width:80px;">姓名</th>
+                <th style="width:140px;">班级</th>
+                <th style="width:60px;">类型</th>
+                <th style="width:190px;">起止日期</th>
+                <th style="width:60px;">天数</th>
+                <th>事由</th>
+                <th style="width:140px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="leaveBody"></tbody>
+        </table>
+    </div>
+
+    <div class="table-box">
+        <div class="panel-title">
+            <span>最近资助记录</span>
+            <span class="more" data-open="/aid">资助管理 &gt;</span>
+        </div>
+        <table class="layui-table" lay-size="sm">
+            <thead>
+            <tr>
+                <th style="width:110px;">学号</th>
+                <th style="width:80px;">姓名</th>
+                <th style="width:100px;">类型</th>
+                <th style="width:130px;">学期</th>
+                <th style="width:100px;">金额</th>
+                <th style="width:90px;">状态</th>
+            </tr>
+            </thead>
+            <tbody id="aidBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['layer'], function () {
+    var layer = layui.layer, $ = layui.$;
+
+    $('[data-open]').on('click', function () {
+        var url = $(this).data('open');
+        if (window.parent && window.parent !== window && window.parent.appOpenTab) {
+            window.parent.appOpenTab(url, $(this).text().replace(/\s*>$/, '').trim());
+        } else {
+            window.location.href = url;
+        }
+    });
+
+    function load() {
+        $.get('/dashboard/counselor', function (res) {
+            if (res.code !== 1) { layer.msg('数据加载失败', {icon: 2}); return; }
+            var d = res.data, s = d.stats;
+            $('#statStudent').text(s.student);
+            $('#statClass').text(s.class);
+            $('#statLeave').text(s.leavePending);
+            $('#statAid').text(s.aidPending);
+            $('#statAmount').text(s.aidAmount);
+
+            var lHtml = '';
+            d.pendingLeaves.forEach(function (l) {
+                lHtml += '<tr>' +
+                    '<td>' + l.student_no + '</td>' +
+                    '<td>' + l.student_name + '</td>' +
+                    '<td>' + (l.class_name || '-') + '</td>' +
+                    '<td>' + l.type_text + '</td>' +
+                    '<td>' + l.start_date + ' ~ ' + l.end_date + '</td>' +
+                    '<td>' + l.days + '</td>' +
+                    '<td>' + l.reason + '</td>' +
+                    '<td>' +
+                    '<a class="layui-btn layui-btn-xs" data-act="approve" data-id="' + l.id + '">批准</a>' +
+                    '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="reject" data-id="' + l.id + '">驳回</a>' +
+                    '</td></tr>';
+            });
+            $('#leaveBody').html(lHtml || '<tr><td colspan="8" class="empty-tip">没有待审批的请假</td></tr>');
+
+            var aHtml = '';
+            d.recentAids.forEach(function (a) {
+                var cls = a.status == 1 ? 'status-on' : (a.status == 2 ? 'status-off' : 'status-warn');
+                aHtml += '<tr>' +
+                    '<td>' + a.student_no + '</td>' +
+                    '<td>' + a.student_name + '</td>' +
+                    '<td>' + a.type_text + '</td>' +
+                    '<td>' + a.semester + '</td>' +
+                    '<td>' + a.amount + '</td>' +
+                    '<td><span class="status-dot ' + cls + '"></span>' + a.status_text + '</td>' +
+                    '</tr>';
+            });
+            $('#aidBody').html(aHtml || '<tr><td colspan="6" class="empty-tip">暂无资助记录</td></tr>');
+        }, 'json');
+    }
+
+    $('#leaveBody').on('click', 'a[data-act]', function () {
+        var id = $(this).data('id');
+        var status = $(this).data('act') === 'approve' ? 1 : 2;
+        layer.prompt({
+            title: status === 1 ? '批准请假（可填写审批意见）' : '驳回请假（请填写原因）',
+            formType: 2,
+            value: ''
+        }, function (remark, idx) {
+            $.post('/leave/approve', {id: id, status: status, remark: remark}, function (r) {
+                layer.close(idx);
+                layer.msg(r.msg, {icon: r.code === 1 ? 1 : 2});
+                if (r.code === 1) { load(); }
+            }, 'json');
+        });
+    });
+
+    load();
+});
+</script>
+</body>
+</html>
