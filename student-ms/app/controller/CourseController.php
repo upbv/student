@@ -35,7 +35,7 @@ class CourseController
         $teacherId = (int) $request->param('teacher_id', 0);
         $semester  = trim((string) $request->param('semester', ''));
 
-        $query = Course::withTrashed()->order('id', 'asc');
+        $query = Course::order('id', 'asc');
 
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {

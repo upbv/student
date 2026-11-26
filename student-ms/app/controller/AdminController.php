@@ -35,7 +35,7 @@ class AdminController
         $status = $request->param('status', '');
         $roleId = (int) $request->param('role_id', 0);
 
-        $query = Admin::withTrashed()->order('id', 'asc');
+        $query = Admin::order('id', 'asc');
 
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {

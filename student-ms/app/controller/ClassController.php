@@ -33,7 +33,7 @@ class ClassController
         $keyword = trim((string) $request->param('keyword', ''));
         $deptId  = (int) $request->param('department_id', 0);
 
-        $query = SchoolClass::withTrashed()->order('id', 'asc');
+        $query = SchoolClass::order('id', 'asc');
 
         if ($keyword !== '') {
             $query->whereLike('name', "%{$keyword}%");

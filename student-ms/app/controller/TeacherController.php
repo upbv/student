@@ -32,7 +32,7 @@ class TeacherController
         $keyword = trim((string) $request->param('keyword', ''));
         $deptId  = (int) $request->param('department_id', 0);
 
-        $query = Teacher::withTrashed()->order('id', 'asc');
+        $query = Teacher::order('id', 'asc');
 
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {

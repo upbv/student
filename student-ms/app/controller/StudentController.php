@@ -34,7 +34,7 @@ class StudentController
         $status  = $request->param('status', '');
         $gender  = $request->param('gender', '');
 
-        $query = Student::withTrashed()->order('id', 'asc');
+        $query = Student::order('id', 'asc');
 
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {
