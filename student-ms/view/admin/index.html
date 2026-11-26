@@ -213,7 +213,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
         form.render('checkbox');
 
         laypage.render({
-            elem: '#dataPage', count: count, limit: limit, curr: page,
+            elem: 'dataPage', count: count, limit: limit, curr: page,
             layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
             jump: function (obj, first) {
                 if (!first) { page = obj.curr; limit = obj.limit; loadData(); }

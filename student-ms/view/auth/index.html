@@ -154,24 +154,29 @@ layui.use(['form', 'layer', 'tree'], function () {
         return out;
     }
 
+    function rowHtml(n, level) {
+        var indent = '&nbsp;'.repeat(level * 4);
+        return '<tr>' +
+            '<td>' + n.id + '</td>' +
+            '<td>' + indent + (level > 0 ? '<span style="color:#C9C5BB">└ </span>' : '') + n.name + '</td>' +
+            '<td>' + n.type_text + '</td>' +
+            '<td>' + (n.path || '-') + '</td>' +
+            '<td>' + (n.icon || '-') + '</td>' +
+            '<td>' + n.sort + '</td>' +
+            '<td><span class="status-dot ' + (n.status == 1 ? 'status-on' : 'status-off') + '"></span>' + (n.status == 1 ? '启用' : '停用') + '</td>' +
+            '<td>' +
+            '<a class="layui-btn layui-btn-xs layui-btn-warm" data-act="edit" data-id="' + n.id + '">编辑</a>' +
+            '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="delete" data-id="' + n.id + '">删除</a>' +
+            '</td></tr>';
+    }
+
     function buildTreeHtml(nodes, level) {
         var html = '';
         nodes.forEach(function (n) {
-            var hasChild = n.children && n.children.length;
-            var indent = '&nbsp;'.repeat(level * 4);
-            html += '<tr>' +
-                '<td>' + n.id + '</td>' +
-                '<td>' + indent + (level > 0 ? '<span style="color:#c2c8d0">└ </span>' : '') + n.name + '</td>' +
-                '<td>' + n.type_text + '</td>' +
-                '<td>' + (n.path || '-') + '</td>' +
-                '<td>' + (n.icon || '-') + '</td>' +
-                '<td>' + n.sort + '</td>' +
-                '<td><span class="status-dot ' + (n.status == 1 ? 'status-on' : 'status-off') + '"></span>' + (n.status == 1 ? '启用' : '停用') + '</td>' +
-                '<td>' +
-                '<a class="layui-btn layui-btn-xs layui-btn-warm" data-act="edit" data-id="' + n.id + '">编辑</a>' +
-                '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="delete" data-id="' + n.id + '">删除</a>' +
-                '</td></tr>';
-            if (hasChild) { html += buildTreeHtml(n.children, level + 1); }
+            html += rowHtml(n, level);
+            if (expanded && n.children && n.children.length) {
+                html += buildTreeHtml(n.children, level + 1);
+            }
         });
         return html;
     }
@@ -181,9 +186,20 @@ layui.use(['form', 'layer', 'tree'], function () {
             if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
             allNodes = flatten(res.data, 0, []);
 
-            var html = buildTreeHtml(res.data, 0);
-            if (!res.data.length) {
-                html = '<tr><td colspan="8" class="empty-tip"><i class="layui-icon layui-icon-face-surprised"></i><br>暂无权限数据</td></tr>';
+            var keyword = ($('#searchForm [name=keyword]').val() || '').trim();
+            var html = '';
+            if (keyword) {
+                html = allNodes.filter(function (n) {
+                    return (n.name || '').indexOf(keyword) >= 0 || (n.path || '').indexOf(keyword) >= 0;
+                }).map(function (n) {
+                    return rowHtml(n, 0);
+                }).join('');
+            } else {
+                html = buildTreeHtml(res.data, 0);
+            }
+
+            if (!html) {
+                html = '<tr><td colspan="8" class="empty-tip">暂无符合条件的权限</td></tr>';
             }
             $('#tableBody').html(html);
             fillPidSelect();
@@ -210,6 +226,8 @@ layui.use(['form', 'layer', 'tree'], function () {
         $('#btnExpand').text(expanded ? '收起全部' : '展开全部');
         loadData();
     });
+
+    $('#btnExpand').text(expanded ? '收起全部' : '展开全部');
 
     $('#btnAdd').on('click', function () {
         layer.open({

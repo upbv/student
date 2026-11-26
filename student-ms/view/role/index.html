@@ -154,7 +154,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
         $('#tableBody').html(html);
 
         laypage.render({
-            elem: '#dataPage', count: count, limit: limit, curr: page,
+            elem: 'dataPage', count: count, limit: limit, curr: page,
             layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
             jump: function (obj, first) {
                 if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
@@ -222,17 +222,15 @@ layui.use(['form', 'layer', 'laypage'], function () {
             $.get('/role/auths', {role_id: curRoleId}, function (r2) {
                 var checked = r2.data || [];
                 var roleName = $('#authRoleNameCache').val();
-                var html = '<div class="layui-form" style="padding:18px 22px 6px;">';
-                html += '<div class="layui-form-item"><label class="layui-form-label">角色</label>';
-                html += '<div class="layui-input-block" style="line-height:38px;font-weight:600;">' + roleName + '</div></div>';
-                html += '<div class="layui-form-item"><label class="layui-form-label">权限分配</label>';
-                html += '<div class="layui-input-block"><div id="authTree">';
+                var html = '<div class="layui-form auth-dialog">';
+                html += '<div class="auth-dialog-hd"><span>角色</span><b>' + roleName + '</b></div>';
+                html += '<div class="auth-dialog-bd" id="authTree">';
                 html += buildAuthNodes(res.data, checked);
-                html += '</div></div></div>';
-                html += '<div class="layui-form-item"><div class="layui-input-block">';
-                html += '<button type="button" class="layui-btn" id="btnSaveAuth">保存权限</button>';
-                html += '<button type="button" class="layui-btn layui-btn-primary" id="cancelAuth">取消</button>';
-                html += '</div></div></div>';
+                html += '</div>';
+                html += '<div class="auth-dialog-ft">';
+                html += '<button type="button" class="layui-btn layui-btn-sm layui-btn-normal" id="btnSaveAuth">保存权限</button>';
+                html += '<button type="button" class="layui-btn layui-btn-sm layui-btn-primary" id="cancelAuth">取消</button>';
+                html += '</div></div>';
                 layer.open({
                     type: 1, title: '分配权限', content: html, area: ['560px', '640px'],
                     success: function () { form.render('checkbox'); }

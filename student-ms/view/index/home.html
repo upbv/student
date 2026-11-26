@@ -127,10 +127,14 @@ layui.use(['layer'], function () {
     var layer = layui.layer;
     var $ = layui.$;
 
-    // 卡片与快捷入口跳转（在 iframe 内直接切换地址）
+    // 卡片与快捷入口：优先交给父框架打开标签页
     $('.panel-card.link, .panel-title .more, .layui-btn[data-url]').on('click', function () {
         var url = $(this).data('url');
-        if (url) {
+        if (!url) { return; }
+        var title = $(this).find('.label').text() || $(this).text().trim().replace(/\s*>$/, '');
+        if (window.parent && window.parent !== window && window.parent.appOpenTab) {
+            window.parent.appOpenTab(url, title);
+        } else {
             window.location.href = url;
         }
     });

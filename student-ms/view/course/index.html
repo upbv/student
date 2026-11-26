@@ -226,7 +226,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
         $('#tableBody').html(html);
 
         laypage.render({
-            elem: '#dataPage', count: count, limit: limit, curr: page,
+            elem: 'dataPage', count: count, limit: limit, curr: page,
             layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
             jump: function (obj, first) {
                 if (!first) { page = obj.curr; limit = obj.limit; loadData(); }

@@ -5,158 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>{$title}</title>
     <link rel="stylesheet" href="/static/layui/css/layui.css">
-    <style>
-        * { box-sizing: border-box; }
-
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-
-        body {
-            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-            background: #eef0f4;
-            color: #333;
-        }
-
-        .login-page {
-            min-height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 顶部条 */
-        .login-top {
-            height: 64px;
-            background: #2b3648;
-            color: #e6ebf2;
-            display: flex;
-            align-items: center;
-            padding: 0 32px;
-            font-size: 17px;
-            letter-spacing: 1px;
-        }
-
-        .login-top .layui-icon {
-            font-size: 20px;
-            margin-right: 8px;
-            color: #6ea8e8;
-        }
-
-        .login-top .sub {
-            margin-left: 12px;
-            padding-left: 12px;
-            border-left: 1px solid #455268;
-            font-size: 13px;
-            color: #93a1b5;
-            letter-spacing: 0;
-        }
-
-        /* 主体 */
-        .login-main {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            background:
-                linear-gradient(180deg, #f7f8fa 0, #eef0f4 160px);
-        }
-
-        .login-card {
-            width: 360px;
-            background: #fff;
-            border: 1px solid #dfe4ec;
-            border-radius: 4px;
-            padding: 28px 30px 24px;
-            box-shadow: 0 6px 18px rgba(43, 54, 72, .07);
-        }
-
-        .login-card h1 {
-            font-size: 16px;
-            color: #333;
-            margin: 0 0 4px;
-            font-weight: 600;
-        }
-
-        .login-card .hint {
-            font-size: 12px;
-            color: #98a2b1;
-            margin: 0 0 22px;
-        }
-
-        .login-card .layui-form-item {
-            margin-bottom: 16px;
-        }
-
-        .login-card .layui-input {
-            height: 38px;
-            line-height: 38px;
-            border-color: #d8dee7;
-            font-size: 13px;
-            padding-left: 38px;
-        }
-
-        .login-card .layui-input:focus {
-            border-color: #3c6fa8;
-        }
-
-        .field {
-            position: relative;
-        }
-
-        .field .layui-icon {
-            position: absolute;
-            left: 12px;
-            top: 11px;
-            font-size: 15px;
-            color: #a8b1bf;
-            z-index: 1;
-        }
-
-        .login-card .layui-btn {
-            width: 100%;
-            height: 38px;
-            line-height: 38px;
-            background: #3c6fa8;
-            font-size: 14px;
-            letter-spacing: 4px;
-            border-radius: 3px;
-        }
-
-        .login-card .layui-btn:hover {
-            background: #325e90;
-        }
-
-        .demo-tip {
-            margin-top: 16px;
-            padding-top: 14px;
-            border-top: 1px dashed #e6eaf0;
-            font-size: 12px;
-            color: #8b95a5;
-            line-height: 1.9;
-        }
-
-        .demo-tip b {
-            color: #55606e;
-            font-weight: 600;
-        }
-
-        .login-bottom {
-            text-align: center;
-            padding: 16px 0;
-            font-size: 12px;
-            color: #98a2b1;
-            line-height: 1.8;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/layui/admin.css">
 </head>
-<body>
-<div class="login-page">
+<body class="login-body">
+<div class="login-wrap">
     <div class="login-top">
-        <i class="layui-icon layui-icon-read"></i>
-        <span>学生管理系统</span>
-        <span class="sub">教务信息综合管理平台</span>
+        <span class="brand-name">学生管理系统</span>
+        <span class="brand-sub">Student Management System</span>
     </div>
 
     <div class="login-main">
@@ -186,16 +41,15 @@
                 </div>
             </form>
 
-            <div class="demo-tip">
-                演示账号：管理员 <b>admin / admin123</b><br>
-                　　　　　教师 <b>teacher / teacher123</b>
+            <div class="login-tip">
+                演示账号：管理员 <b>admin / admin123</b>　　教师 <b>teacher / teacher123</b>
             </div>
         </div>
     </div>
 
     <div class="login-bottom">
         计算机信息学院 · 信息安全 2408 班 毕业设计作品<br>
-        ThinkPHP 6 + Layui 构建
+        ThinkPHP 6 + Layui
     </div>
 </div>
 
@@ -208,7 +62,7 @@ layui.use(['form', 'layer'], function () {
         $ = layui.$;
 
     form.on('submit(doLogin)', function (data) {
-        var loading = layer.load(2, {shade: [0.1, '#fff']});
+        var loading = layer.load(2, {shade: [0.08, '#fff']});
         $.post('/login/do', data.field, function (res) {
             layer.close(loading);
             if (res.code === 1) {
