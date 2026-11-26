@@ -371,9 +371,10 @@ INSERT INTO `ms_auth` (`pid`,`name`,`type`,`path`,`icon`,`sort`,`status`,`create
 -- 账号角色关联
 INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3),(3,5),(4,4);
 
--- 角色权限关联: 超管拥有全部权限
+-- 角色权限关联: 超管拥有全部管理权限（学生服务与教师工作台为个人页面，仅授予对应角色）
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`)
-SELECT 1, id FROM `ms_auth`;
+SELECT 1, id FROM `ms_auth`
+WHERE id NOT IN (55,56,57,58,61,62,63,64,65,66,73,74);
 
 -- 教务管理员：学生、班级、院系、教师、课程、选课、成绩与日志
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`) VALUES

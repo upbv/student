@@ -114,6 +114,19 @@ class PermissionService
             }
         }
 
+        // 个人页面只对绑定了学生/教师记录的账号显示
+        $personal = [
+            'mygrade'   => AuthService::studentId() > 0,
+            'myleave'   => AuthService::studentId() > 0,
+            'myaid'     => AuthService::studentId() > 0,
+            'mycourse'  => AuthService::teacherId() > 0,
+            'mystudents'=> AuthService::teacherId() > 0,
+        ];
+        $list = array_values(array_filter($list, function ($item) use ($personal) {
+            $path = $item['path'] ?? '';
+            return !isset($personal[$path]) || $personal[$path];
+        }));
+
         return self::buildTree($list);
     }
 
@@ -140,13 +153,24 @@ class PermissionService
     {
         $tree = [];
         foreach ($list as $item) {
-            if ((int) $item['pid'] === $pid) {
-                $children = self::buildTree($list, (int) $item['id']);
-                if ($children) {
-                    $item['children'] = $children;
-                }
-                $tree[] = $item;
+            if ((int) $item['pid'] !== $pid) {
+                continue;
             }
+            // 顶级分组在过滤后没有子菜单时不再显示
+            if ((int) $item['pid'] === 0 && ($item['path'] ?? '') === '') {
+                $children = self::buildTree($list, (int) $item['id']);
+                if (empty($children)) {
+                    continue;
+                }
+                $item['children'] = $children;
+                $tree[] = $item;
+                continue;
+            }
+            $children = self::buildTree($list, (int) $item['id']);
+            if ($children) {
+                $item['children'] = $children;
+            }
+            $tree[] = $item;
         }
         return $tree;
     }
