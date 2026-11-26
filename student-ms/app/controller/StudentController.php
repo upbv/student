@@ -2,8 +2,12 @@
 
 namespace app\controller;
 
+use app\model\Admin;
+use app\model\AdminRole;
+use app\model\Role;
 use app\model\SchoolClass;
 use app\model\Student;
+use app\service\AuthService;
 use think\Request;
 
 /**
@@ -11,6 +15,10 @@ use think\Request;
  */
 class StudentController
 {
+    /** 学生账号初始密码 */
+    const DEFAULT_PASSWORD = 'student123';
+
+
     /**
      * 学生列表页
      */
@@ -184,19 +192,69 @@ class StudentController
                 return json(['code' => 0, 'msg' => '学生不存在']);
             }
             $student->save($data);
+            $this->syncAccount($student);
             $action = '编辑学生';
         } else {
-            Student::create($data);
+            $student = Student::create($data);
+            $this->createAccount($student);
             $action = '新增学生';
-            $this->syncClassNum($classId);
         }
 
-        if ($id > 0) {
-            $this->syncClassNum($classId);
-        }
-
+        $this->syncClassNum($classId);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
+    }
+
+    /**
+     * 为学生创建登录账号：账号为学号，初始密码 student123，角色为学生
+     */
+    protected function createAccount(Student $student): void
+    {
+        $exists = Admin::where('username', $student->student_no)->find();
+        if ($exists) {
+            return;
+        }
+
+        $salt  = substr(md5(uniqid((string) microtime(true), true)), 0, 8);
+        $admin = Admin::create([
+            'username'   => $student->student_no,
+            'nickname'   => $student->name,
+            'password'   => AuthService::makePassword(self::DEFAULT_PASSWORD, $salt),
+            'salt'       => $salt,
+            'sex'        => (int) $student->gender,
+            'status'     => 1,
+            'student_id' => (int) $student->id,
+        ]);
+
+        $role = Role::where('code', 'student')->find();
+        if ($role) {
+            AdminRole::create(['admin_id' => $admin->id, 'role_id' => $role->id]);
+        }
+    }
+
+    /**
+     * 学生信息变化时同步账号的姓名与登录名
+     */
+    protected function syncAccount(Student $student): void
+    {
+        $account = Admin::where('student_id', $student->id)->find();
+        if (!$account) {
+            $this->createAccount($student);
+            return;
+        }
+
+        $data = ['nickname' => $student->name];
+
+        if ($account->username !== $student->student_no) {
+            $conflict = Admin::where('username', $student->student_no)
+                ->where('id', '<>', $account->id)
+                ->find();
+            if (!$conflict) {
+                $data['username'] = $student->student_no;
+            }
+        }
+
+        $account->save($data);
     }
 
     /**
@@ -228,6 +286,11 @@ class StudentController
 
         $classIds = Student::whereIn('id', $ids)->column('class_id');
         Student::destroy($ids);
+
+        // 学生被删除后，其登录账号一并停用（软删除）
+        foreach (Admin::whereIn('student_id', $ids)->select() as $account) {
+            $account->delete();
+        }
         foreach (array_unique($classIds) as $classId) {
             $this->syncClassNum((int) $classId);
         }

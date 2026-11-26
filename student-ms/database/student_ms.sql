@@ -299,8 +299,7 @@ CREATE TABLE `ms_operation_log` (
 INSERT INTO `ms_admin` (`username`,`password`,`salt`,`nickname`,`email`,`sex`,`status`,`student_id`,`teacher_id`,`create_time`,`update_time`) VALUES
 ('admin','d8ec77afa4256d2c3abd60a9e799faa9','sms8x2k','系统管理员','admin@student-ms.local',1,1,0,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 ('teacher','8cebe4b61ddaaa8b9d81435a95704f01','sms8x2k','毕柱兰','bzl@student-ms.local',2,1,0,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
-('counselor','e5b7f550b652b014b48891e5c20e3bf3','sms8x2k','王辅导员','fdy@student-ms.local',2,1,0,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
-('2400012811','60da0783ec9a5966ae1719f71349e386','sms8x2k','郭佳辰','gjc@student-ms.local',1,1,1,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+('counselor','e5b7f550b652b014b48891e5c20e3bf3','sms8x2k','王辅导员','fdy@student-ms.local',2,1,0,0,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
 
 -- 角色
 INSERT INTO `ms_role` (`name`,`code`,`remark`,`status`,`sort`,`create_time`,`update_time`) VALUES
@@ -368,8 +367,31 @@ INSERT INTO `ms_auth` (`pid`,`name`,`type`,`path`,`icon`,`sort`,`status`,`create
 (16,'清空操作日志',2,'operationlog/clear','',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 (6,'分配权限',2,'role/assign','',4,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
 
+-- 学生服务 / 请假 / 资助 / 教师工作台 权限
+INSERT INTO `ms_auth` (`id`,`pid`,`name`,`type`,`path`,`icon`,`sort`,`status`,`create_time`,`update_time`) VALUES
+(55,0,'学生服务',1,'','layui-icon-flag',0,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(56,55,'我的成绩',1,'mygrade','layui-icon-chart',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(57,55,'我的请假',1,'myleave','layui-icon-date',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(58,55,'我的资助',1,'myaid','layui-icon-dollar',3,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(59,2,'请假管理',1,'leave','layui-icon-date',5,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(60,2,'资助管理',1,'aid','layui-icon-dollar',6,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(61,3,'我的授课',1,'mycourse','layui-icon-template-1',0,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(62,3,'我的学生',1,'mystudents','layui-icon-group',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(63,56,'查看成绩',2,'mygrade/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(64,57,'查看请假',2,'myleave/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(65,57,'申请请假',2,'myleave/save','',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(66,58,'查看资助',2,'myaid/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(67,59,'查看请假记录',2,'leave/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(68,59,'审批请假',2,'leave/approve','',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(69,59,'删除请假',2,'leave/delete','',3,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(70,60,'查看资助记录',2,'aid/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(71,60,'新增资助',2,'aid/save','',2,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(72,60,'删除资助',2,'aid/delete','',3,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(73,61,'查看授课',2,'mycourse/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
+(74,62,'查看学生',2,'mystudents/list','',1,1,UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+
 -- 账号角色关联
-INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3),(3,5),(4,4);
+INSERT INTO `ms_admin_role` (`admin_id`,`role_id`) VALUES (1,1),(2,3),(3,5);
 
 -- 角色权限关联: 超管拥有全部管理权限（学生服务与教师工作台为个人页面，仅授予对应角色）
 INSERT INTO `ms_role_auth` (`role_id`,`auth_id`)
@@ -486,3 +508,16 @@ INSERT INTO `ms_aid` (`student_id`,`type`,`semester`,`amount`,`status`,`remark`,
 (1,2,'2026-2027-1',1000.00,0,'学院奖学金申请中',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 (2,3,'2026-2027-1',800.00,0,'临时困难补助申请',UNIX_TIMESTAMP(),UNIX_TIMESTAMP()),
 (3,2,'2025-2026-2',1500.00,1,'校级奖学金',UNIX_TIMESTAMP(),UNIX_TIMESTAMP());
+
+-- 为每名学生创建登录账号：账号=学号，初始密码 student123，角色=学生
+INSERT INTO `ms_admin` (`username`,`password`,`salt`,`nickname`,`sex`,`status`,`student_id`,`teacher_id`,`create_time`,`update_time`)
+SELECT s.student_no, '60da0783ec9a5966ae1719f71349e386', 'sms8x2k', s.name, s.gender, 1, s.id, 0, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()
+FROM `ms_student` s
+LEFT JOIN `ms_admin` a ON a.username = s.student_no
+WHERE a.id IS NULL;
+
+INSERT INTO `ms_admin_role` (`admin_id`,`role_id`)
+SELECT a.id, 4
+FROM `ms_admin` a
+LEFT JOIN `ms_admin_role` ar ON ar.admin_id = a.id AND ar.role_id = 4
+WHERE a.student_id > 0 AND ar.id IS NULL;
