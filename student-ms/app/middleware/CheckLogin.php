@@ -17,6 +17,7 @@ class CheckLogin
         'login',
         'login/do',
         'logout',
+        'login/logout',
     ];
 
     /**

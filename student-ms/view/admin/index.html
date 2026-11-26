@@ -146,12 +146,9 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">所属角色</label>
                     <div class="layui-input-block">
-                        <div id="roleBox" class="layui-form-checkbox-group">
+                        <div id="roleBox" style="line-height:32px;">
                             {volist name="roles" id="vo"}
-                            <label class="layui-form-checkbox">
-                                <input type="checkbox" name="role_ids" value="{$vo.id}" title="{$vo.name}">
-                                <span>{$vo.name}</span>
-                            </label>
+                            <input type="checkbox" name="role_ids" value="{$vo.id}" title="{$vo.name}" lay-skin="primary">
                             {/volist}
                         </div>
                     </div>
@@ -241,7 +238,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
 
     $('#btnAdd').on('click', function () {
         layer.open({
-            type: 1, title: '新增账号', content: $('#editLayer').html(), area: ['720px', '560px'],
+            type: 1, title: '新增账号', content: $('#editLayer').html(), area: ['720px', '480px'],
             success: function () { form.render(null, 'editForm'); }
         });
     });
@@ -253,7 +250,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
 
         if (act === 'edit') {
             layer.open({
-                type: 1, title: '编辑账号', content: $('#editLayer').html(), area: ['720px', '560px'],
+                type: 1, title: '编辑账号', content: $('#editLayer').html(), area: ['720px', '480px'],
                 success: function () {
                     form.render(null, 'editForm');
                     $('#fieldId').val(row.id);

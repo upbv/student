@@ -315,7 +315,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
             type: 1,
             title: '新增学生',
             content: $('#editLayer').html(),
-            area: ['760px', '600px'],
+            area: ['760px', '560px'],
             success: function () {
                 form.render(null, 'editForm');
             }
@@ -334,7 +334,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
                 type: 1,
                 title: '编辑学生',
                 content: $('#editLayer').html(),
-                area: ['760px', '600px'],
+                area: ['760px', '560px'],
                 success: function () {
                     form.render(null, 'editForm');
                     $('#fieldId').val(row.id);
@@ -403,7 +403,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
                     type: 1,
                     title: '学生详情 - ' + d.name,
                     content: html,
-                    area: ['760px', '600px']
+                    area: ['760px', '560px']
                 });
             }, 'json');
         }

@@ -204,7 +204,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
 
     $('#btnAdd').on('click', function () {
         layer.open({
-            type: 1, title: '新增教师', content: $('#editLayer').html(), area: ['680px', '520px'],
+            type: 1, title: '新增教师', content: $('#editLayer').html(), area: ['680px', '470px'],
             success: function () { form.render(null, 'editForm'); }
         });
     });
@@ -216,7 +216,7 @@ layui.use(['form', 'layer', 'laypage'], function () {
 
         if (act === 'edit') {
             layer.open({
-                type: 1, title: '编辑教师', content: $('#editLayer').html(), area: ['680px', '520px'],
+                type: 1, title: '编辑教师', content: $('#editLayer').html(), area: ['680px', '470px'],
                 success: function () {
                     form.render(null, 'editForm');
                     $('#fieldId').val(row.id);

@@ -26,6 +26,7 @@ Route::get('/', 'index/main')->name('main');
 Route::get('login', 'login/index')->name('login_page');
 Route::post('login/do', 'login/doLogin')->name('login_submit');
 Route::get('logout', 'login/logout')->name('logout');
+Route::get('login/logout', 'login/logout')->name('logout_legacy');
 Route::get('login/menus', 'login/menus')->name('login_menus');
 
 // ---------------------------------------------------------------------------

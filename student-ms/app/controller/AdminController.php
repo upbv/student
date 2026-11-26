@@ -59,7 +59,7 @@ class AdminController
             $row = $item->toArray();
             $row['status_text'] = $item->status_text;
             $row['sex_text']    = $item->sex_text;
-            $row['role_names'] = implode('、', $item->roleNames());
+            $row['role_names'] = $item->roleNames() ? implode('、', $item->roleNames()) : '未分配';
             $row['role_ids']   = AdminRole::where('admin_id', $item->id)->column('role_id');
             $row['last_login'] = $item->last_login ? date('Y-m-d H:i:s', $item->last_login) : '从未登录';
             $data[] = $row;

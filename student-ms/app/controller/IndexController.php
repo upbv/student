@@ -111,7 +111,8 @@ class IndexController
         $info['last_login_ip']   = $admin->last_login_ip ?: '-';
         $info['create_time_text'] = !empty($admin->create_time) ? (string) $admin->create_time : '-';
         $info['nickname_initial'] = mb_substr($info['nickname'] ?? '管', 0, 1);
-        $info['role_names']       = $admin ? implode('、', $admin->roleNames()) : '未分配角色';
+        $names = $admin ? $admin->roleNames() : [];
+        $info['role_names'] = $names ? implode('、', $names) : '未分配角色';
 
         return view('index/profile', [
             'title' => '学生管理系统 - 个人资料',

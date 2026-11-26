@@ -48,11 +48,11 @@ class Admin extends Model
     /**
      * 获取关联的角色名称
      */
-    public function roleNames()
+    public function roleNames(): array
     {
         $roleIds = AdminRole::where('admin_id', $this->id)->column('role_id');
         if (empty($roleIds)) {
-            return '';
+            return [];
         }
         return Role::whereIn('id', $roleIds)->column('name');
     }

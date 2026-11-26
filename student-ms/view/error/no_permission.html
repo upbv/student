@@ -12,31 +12,32 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f2f4f7;
-            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: #F7F6F2;
+            font-family: "Helvetica Neue", Arial, "Microsoft YaHei", "PingFang SC", sans-serif;
         }
         .err-box {
-            width: 420px;
+            width: 440px;
             background: #fff;
-            border-radius: 6px;
-            padding: 40px 30px;
+            border: 1px solid #E3E0D9;
+            border-radius: 2px;
+            padding: 40px 34px;
             text-align: center;
-            box-shadow: 0 4px 16px rgba(0, 21, 41, .08);
         }
         .err-box .icon {
-            font-size: 56px;
-            color: #ff5722;
+            font-size: 34px;
+            color: #2F5D50;
         }
         .err-box h2 {
-            font-size: 18px;
-            color: #495468;
-            margin: 14px 0 8px;
-            font-weight: 600;
+            font-family: Georgia, "Songti SC", "SimSun", serif;
+            font-size: 20px;
+            color: #1A1A1A;
+            margin: 16px 0 8px;
+            font-weight: 700;
         }
         .err-box p {
-            font-size: 13px;
-            color: #8a94a6;
-            margin: 0 0 24px;
+            font-size: 12.5px;
+            color: #75726B;
+            margin: 0 0 26px;
         }
     </style>
 </head>
@@ -45,7 +46,7 @@
     <i class="layui-icon layui-icon-auz icon"></i>
     <h2>没有访问权限</h2>
     <p>{$msg}</p>
-    <a href="/index/index" class="layui-btn layui-btn-sm layui-btn-normal">返回首页</a>
+    <a href="/dashboard" target="_top" class="layui-btn layui-btn-sm layui-btn-normal">返回控制台</a>
 </div>
 </body>
 </html>
