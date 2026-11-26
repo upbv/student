@@ -185,7 +185,6 @@ class IndexController
             'login_fail'  => 0,
         ]);
 
-        \app\service\LogService::writeFromRequest($request, '个人中心', '修改密码');
 
         return json(['code' => 1, 'msg' => '密码修改成功']);
     }

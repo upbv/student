@@ -4,7 +4,6 @@ namespace app\controller;
 
 use app\model\SchoolClass;
 use app\model\Student;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -196,7 +195,6 @@ class StudentController
             $this->syncClassNum($classId);
         }
 
-        LogService::writeFromRequest($request, '学生管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -234,7 +232,6 @@ class StudentController
             $this->syncClassNum((int) $classId);
         }
 
-        LogService::writeFromRequest($request, '学生管理', '删除学生', 1, '', '批量删除 ' . count($ids) . ' 名学生');
 
         return json(['code' => 1, 'msg' => '删除成功']);
     }
@@ -283,7 +280,6 @@ class StudentController
         }
         fclose($output);
 
-        LogService::writeFromRequest($request, '学生管理', '导出名单');
 
         exit;
     }

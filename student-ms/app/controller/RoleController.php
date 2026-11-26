@@ -5,7 +5,6 @@ namespace app\controller;
 use app\model\AdminRole;
 use app\model\Role;
 use app\model\RoleAuth;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -122,7 +121,6 @@ class RoleController
             RoleAuth::create(['role_id' => $role->id, 'auth_id' => $authId]);
         }
 
-        LogService::writeFromRequest($request, '角色管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -152,7 +150,6 @@ class RoleController
             RoleAuth::create(['role_id' => $roleId, 'auth_id' => $authId]);
         }
 
-        LogService::writeFromRequest($request, '角色管理', '分配权限', 1, '', '共分配 ' . count($authIds) . ' 项权限');
 
         return json(['code' => 1, 'msg' => '权限保存成功']);
     }
@@ -188,7 +185,6 @@ class RoleController
         Role::destroy($id);
         RoleAuth::where('role_id', $id)->delete();
 
-        LogService::writeFromRequest($request, '角色管理', '删除角色');
 
         return json(['code' => 1, 'msg' => '删除成功']);
     }

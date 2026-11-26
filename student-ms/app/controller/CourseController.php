@@ -5,7 +5,6 @@ namespace app\controller;
 use app\model\Course;
 use app\model\Department;
 use app\model\Teacher;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -129,7 +128,6 @@ class CourseController
             $action = '新增课程';
         }
 
-        LogService::writeFromRequest($request, '课程管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -147,7 +145,6 @@ class CourseController
         }
 
         Course::destroy($id);
-        LogService::writeFromRequest($request, '课程管理', '删除课程');
 
         return json(['code' => 1, 'msg' => '删除成功']);
     }

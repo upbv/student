@@ -3,7 +3,6 @@
 namespace app\controller;
 
 use app\model\Department;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -85,7 +84,6 @@ class DepartmentController
             $action = '新增院系';
         }
 
-        LogService::writeFromRequest($request, '院系管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -102,7 +100,6 @@ class DepartmentController
         }
 
         Department::destroy($id);
-        LogService::writeFromRequest($request, '院系管理', '删除院系');
 
         return json(['code' => 1, 'msg' => '删除成功']);
     }

@@ -72,7 +72,6 @@ class LoginLogController
         $num = LoginLog::where('id', '>', 0)->count();
         LoginLog::where('id', '>', 0)->delete();
 
-        \app\service\LogService::writeFromRequest($request, '登录日志', '清空日志', 1, '', "清空 {$num} 条登录日志");
 
         return json(['code' => 1, 'msg' => '已清空 ' . $num . ' 条登录日志']);
     }

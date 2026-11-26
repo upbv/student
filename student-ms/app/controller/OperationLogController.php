@@ -38,6 +38,7 @@ class OperationLogController
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {
                 $q->whereLike('username', "%{$keyword}%")
+                  ->whereOr('module', 'like', "%{$keyword}%")
                   ->whereOr('action', 'like', "%{$keyword}%")
                   ->whereOr('ip', 'like', "%{$keyword}%");
             });
@@ -77,7 +78,6 @@ class OperationLogController
         $num = OperationLog::where('id', '>', 0)->count();
         OperationLog::where('id', '>', 0)->delete();
 
-        \app\service\LogService::writeFromRequest($request, '操作日志', '清空日志', 1, '', "清空 {$num} 条操作日志");
 
         return json(['code' => 1, 'msg' => '已清空 ' . $num . ' 条操作日志']);
     }

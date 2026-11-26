@@ -6,7 +6,6 @@ use app\model\Admin;
 use app\model\AdminRole;
 use app\model\Role;
 use app\service\AuthService;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -157,7 +156,6 @@ class AdminController
             AdminRole::create(['admin_id' => $admin->id, 'role_id' => $roleId]);
         }
 
-        LogService::writeFromRequest($request, '账号管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -184,7 +182,6 @@ class AdminController
         Admin::destroy($ids);
         AdminRole::whereIn('admin_id', $ids)->delete();
 
-        LogService::writeFromRequest($request, '账号管理', '删除账号', 1, '', '批量删除 ' . count($ids) . ' 个账号');
 
         return json(['code' => 1, 'msg' => '删除成功']);
     }
@@ -211,7 +208,6 @@ class AdminController
             'login_fail' => 0,
         ]);
 
-        LogService::writeFromRequest($request, '账号管理', '重置密码');
 
         return json(['code' => 1, 'msg' => '密码已重置为：' . $password]);
     }

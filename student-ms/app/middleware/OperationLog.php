@@ -14,8 +14,19 @@ class OperationLog
      * 需要记录日志的模块
      */
     protected $modules = [
-        'admin', 'role', 'auth', 'student', 'class', 'department',
-        'teacher', 'course', 'select', 'score',
+        'admin'      => '账号管理',
+        'role'       => '角色管理',
+        'auth'       => '权限管理',
+        'student'    => '学生管理',
+        'class'      => '班级管理',
+        'department' => '院系管理',
+        'teacher'    => '教师管理',
+        'course'     => '课程管理',
+        'select'     => '选课管理',
+        'score'      => '成绩管理',
+        'loginlog'   => '登录日志',
+        'operationlog' => '操作日志',
+        'profile'    => '个人中心',
     ];
 
     /**
@@ -29,7 +40,7 @@ class OperationLog
 
         // 仅记录写操作
         $writeMethods = ['POST', 'PUT', 'DELETE'];
-        if (!in_array($module, $this->modules, true) || !in_array($request->method(), $writeMethods, true)) {
+        if (!isset($this->modules[$module]) || !in_array($request->method(), $writeMethods, true)) {
             return $next($request);
         }
 
@@ -54,8 +65,8 @@ class OperationLog
         }
 
         LogService::write(
-            $module,
-            $this->describeAction($module, $seg),
+            $this->modules[$module],
+            $this->describeAction($seg),
             $request->method(),
             $request->url(),
             $request->ip(),
@@ -69,35 +80,21 @@ class OperationLog
     }
 
     /**
-     * 根据请求路径生成可读的操作描述
+     * 根据请求路径生成可读的操作动作
      */
-    protected function describeAction(string $module, array $seg): string
+    protected function describeAction(array $seg): string
     {
-        $moduleNames = [
-            'admin'      => '账号管理',
-            'role'       => '角色管理',
-            'auth'       => '权限管理',
-            'student'    => '学生管理',
-            'class'      => '班级管理',
-            'department' => '院系管理',
-            'teacher'    => '教师管理',
-            'course'     => '课程管理',
-            'select'     => '选课管理',
-            'score'      => '成绩管理',
-        ];
-
         $actionNames = [
-            'save'   => '保存',
-            'delete' => '删除',
-            'reset'  => '重置密码',
-            'assign' => '分配权限',
-            'batch'  => '批量处理',
-            'clear'  => '清空',
+            'save'       => '保存',
+            'delete'     => '删除',
+            'reset'      => '重置密码',
+            'assign'     => '分配权限',
+            'batch'      => '批量保存',
+            'clear'      => '清空',
+            'export'     => '导出',
+            'password'   => '修改密码',
         ];
 
-        $name = $moduleNames[$module] ?? $module;
-        $act  = $actionNames[$seg[1] ?? ''] ?? ($seg[1] ?? '操作');
-
-        return $name . '-' . $act;
+        return $actionNames[$seg[1] ?? ''] ?? '操作';
     }
 }

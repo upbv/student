@@ -6,7 +6,6 @@ use app\model\Course;
 use app\model\SchoolClass;
 use app\model\SelectCourse;
 use app\model\Student;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -116,7 +115,6 @@ class ScoreController
             $action = '录入成绩';
         }
 
-        LogService::writeFromRequest($request, '成绩管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -193,7 +191,6 @@ class ScoreController
             $msg .= '，' . count($skipped) . ' 条未匹配到选课记录';
         }
 
-        LogService::writeFromRequest($request, '成绩管理', '批量录入成绩', 1, '', "共更新 {$success} 条成绩");
 
         return json(['code' => 1, 'msg' => $msg]);
     }

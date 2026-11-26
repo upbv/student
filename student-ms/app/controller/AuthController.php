@@ -3,7 +3,6 @@
 namespace app\controller;
 
 use app\model\Auth;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -103,7 +102,6 @@ class AuthController
             $action = '新增权限';
         }
 
-        LogService::writeFromRequest($request, '权限管理', $action);
 
         return json(['code' => 1, 'msg' => $action . '成功']);
     }
@@ -140,7 +138,6 @@ class AuthController
         Auth::destroy($id);
         \app\model\RoleAuth::where('auth_id', $id)->delete();
 
-        LogService::writeFromRequest($request, '权限管理', '删除权限');
 
         return json(['code' => 1, 'msg' => '删除成功']);
     }

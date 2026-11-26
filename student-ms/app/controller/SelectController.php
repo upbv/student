@@ -5,7 +5,6 @@ namespace app\controller;
 use app\model\Course;
 use app\model\SelectCourse;
 use app\model\Student;
-use app\service\LogService;
 use think\Request;
 
 /**
@@ -115,7 +114,6 @@ class SelectController
             ]);
         }
 
-        LogService::writeFromRequest($request, '选课管理', '新增选课');
 
         return json(['code' => 1, 'msg' => '选课成功']);
     }
@@ -133,7 +131,6 @@ class SelectController
         }
 
         $record->save(['status' => 0]);
-        LogService::writeFromRequest($request, '选课管理', '学生退课');
 
         return json(['code' => 1, 'msg' => '退课成功']);
     }
