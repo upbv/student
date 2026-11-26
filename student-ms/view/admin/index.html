@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>账号管理</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">账号管理</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>系统管理</span><span class="sep">/</span><em>账号管理</em></span>
+    </div>
+
+    <div class="search-box">
+        <form class="layui-form" lay-filter="searchForm" id="searchForm">
+            <div class="layui-row">
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">关键字</label>
+                        <div class="layui-input-inline" style="width:180px;">
+                            <input type="text" name="keyword" placeholder="账号 / 姓名" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">所属角色</label>
+                        <div class="layui-input-inline" style="width:160px;">
+                            <select name="role_id">
+                                <option value="">全部角色</option>
+                                {volist name="roles" id="vo"}
+                                <option value="{$vo.id}">{$vo.name}</option>
+                                {/volist}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-inline" style="width:120px;">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="1">正常</option>
+                                <option value="0">已禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="resetBtn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <button class="layui-btn layui-btn-sm" id="btnAdd"><i class="layui-icon layui-icon-add-1"></i> 新增账号</button>
+            <button class="layui-btn layui-btn-danger layui-btn-sm" id="btnBatchDelete"><i class="layui-icon layui-icon-delete"></i> 批量删除</button>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:40px;"><input type="checkbox" class="layui-form-checkbox" lay-skin="primary" lay-filter="checkAll"></th>
+                <th style="width:70px;">ID</th>
+                <th style="width:110px;">账号</th>
+                <th style="width:110px;">姓名</th>
+                <th style="width:60px;">性别</th>
+                <th style="width:150px;">角色</th>
+                <th style="width:150px;">最近登录</th>
+                <th style="width:80px;">状态</th>
+                <th style="width:170px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="dataPage" class="page-foot"></div>
+    </div>
+
+<script type="text/html" id="editLayer">
+
+    <form class="layui-form" id="editForm" lay-filter="editForm">
+        <input type="hidden" name="id" id="fieldId">
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">登录账号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" class="layui-input" lay-verify="required" lay-required placeholder="字母开头，4-30 位">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="nickname" class="layui-input" lay-verify="required" lay-required placeholder="真实姓名">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">密码</label>
+                    <div class="layui-input-block">
+                        <input type="password" name="password" class="layui-input" placeholder="编辑时留空表示不修改">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">性别</label>
+                    <div class="layui-input-block">
+                        <select name="sex">
+                            <option value="0">未知</option>
+                            <option value="1">男</option>
+                            <option value="2">女</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">联系电话</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="phone" class="layui-input" placeholder="选填">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">电子邮箱</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" class="layui-input" placeholder="选填">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md12">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">所属角色</label>
+                    <div class="layui-input-block">
+                        <div id="roleBox" class="layui-form-checkbox-group">
+                            {volist name="roles" id="vo"}
+                            <label class="layui-form-checkbox">
+                                <input type="checkbox" name="role_ids" value="{$vo.id}" title="{$vo.name}">
+                                <span>{$vo.name}</span>
+                            </label>
+                            {/volist}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">账号状态</label>
+                    <div class="layui-input-block">
+                        <select name="status">
+                            <option value="1">正常</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="submitEdit">保存</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="cancelEdit">取消</button>
+            </div>
+        </div>
+    </form>
+</script>
+
+</div>
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer', 'laypage'], function () {
+    var form = layui.form, layer = layui.layer, laypage = layui.laypage, $ = layui.$;
+
+    var page = 1, limit = 15, rows = [];
+
+    function render(list, count) {
+        rows = list;
+        var html = '';
+        if (!list.length) {
+            html = '<tr><td colspan="9" class="empty-tip"><i class="layui-icon layui-icon-face-surprised"></i><br>暂无符合条件的账号</td></tr>';
+        }
+        list.forEach(function (r) {
+            html += '<tr>' +
+                '<td><input type="checkbox" class="layui-form-checkbox" lay-skin="primary" lay-filter="checkRow" value="' + r.id + '"></td>' +
+                '<td>' + r.id + '</td>' +
+                '<td>' + r.username + '</td>' +
+                '<td>' + r.nickname + '</td>' +
+                '<td>' + r.sex_text + '</td>' +
+                '<td>' + (r.role_names || '-') + '</td>' +
+                '<td>' + r.last_login + '</td>' +
+                '<td><span class="status-dot ' + (r.status == 1 ? 'status-on' : 'status-off') + '"></span>' + r.status_text + '</td>' +
+                '<td>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-warm" data-act="edit" data-id="' + r.id + '">编辑</a>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-normal" data-act="reset" data-id="' + r.id + '">重置密码</a>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="delete" data-id="' + r.id + '">删除</a>' +
+                '</td></tr>';
+        });
+        $('#tableBody').html(html);
+        form.render('checkbox');
+
+        laypage.render({
+            elem: '#dataPage', count: count, limit: limit, curr: page,
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
+            }
+        });
+    }
+
+    function loadData() {
+        $.get('/admin/list', $('#searchForm').serialize() + '&page=' + page + '&limit=' + limit, function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            render(res.data, res.count);
+        }, 'json');
+    }
+
+    form.on('submit(searchBtn)', function () { page = 1; loadData(); return false; });
+    $('#resetBtn').on('click', function () {
+        $('#searchForm')[0].reset(); form.render(null, 'searchForm'); page = 1; loadData();
+    });
+
+    // 全选
+    form.on('checkbox(checkAll)', function (data) {
+        $('#tableBody').find('input[lay-filter=checkRow]').prop('checked', data.checked);
+        form.render('checkbox');
+    });
+
+    $('#btnAdd').on('click', function () {
+        layer.open({
+            type: 1, title: '新增账号', content: $('#editLayer').html(), area: ['720px', '560px'],
+            success: function () { form.render(null, 'editForm'); }
+        });
+    });
+
+    $('#tableBody').on('click', 'a[data-act]', function () {
+        var act = $(this).data('act'), id = $(this).data('id');
+        var row = rows.filter(function (d) { return d.id == id; })[0];
+        if (!row) { return; }
+
+        if (act === 'edit') {
+            layer.open({
+                type: 1, title: '编辑账号', content: $('#editLayer').html(), area: ['720px', '560px'],
+                success: function () {
+                    form.render(null, 'editForm');
+                    $('#fieldId').val(row.id);
+                    $('#editForm [name=username]').val(row.username);
+                    $('#editForm [name=nickname]').val(row.nickname);
+                    $('#editForm [name=sex]').val(row.sex);
+                    $('#editForm [name=phone]').val(row.phone);
+                    $('#editForm [name=email]').val(row.email);
+                    $('#editForm [name=status]').val(row.status);
+                    var ids = row.role_ids || [];
+                    $('#editForm [name=role_ids]').each(function () {
+                        $(this).prop('checked', ids.indexOf(parseInt($(this).val(), 10)) >= 0);
+                    });
+                    form.render('checkbox');
+                }
+            });
+        } else if (act === 'reset') {
+            layer.prompt({title: '为账号 ' + row.username + ' 设置新密码', formType: 3}, function (pwd, idx) {
+                if (pwd.length < 6) { layer.msg('密码长度不能少于 6 位', {icon: 2}); return; }
+                $.post('/admin/reset', {id: id, password: pwd}, function (res) {
+                    layer.close(idx);
+                    layer.msg(res.code === 1 ? res.msg : res.msg, {icon: res.code === 1 ? 1 : 2});
+                }, 'json');
+            });
+        } else if (act === 'delete') {
+            layer.confirm('确定删除账号「' + row.username + '」吗？', function (index) {
+                layer.close(index);
+                $.post('/admin/delete', {ids: [id]}, function (res) {
+                    layer.msg(res.code === 1 ? '删除成功' : res.msg, {icon: res.code === 1 ? 1 : 2});
+                    if (res.code === 1) { loadData(); }
+                }, 'json');
+            });
+        }
+    });
+
+    $('#btnBatchDelete').on('click', function () {
+        var ids = [];
+        $('#tableBody').find('input[lay-filter=checkRow]:checked').each(function () { ids.push($(this).val()); });
+        if (!ids.length) { layer.msg('请先勾选要删除的账号', {icon: 0}); return; }
+        layer.confirm('确定删除选中的 ' + ids.length + ' 个账号吗？', function (index) {
+            layer.close(index);
+            $.post('/admin/delete', {ids: ids}, function (res) {
+                layer.msg(res.code === 1 ? '删除成功' : res.msg, {icon: res.code === 1 ? 1 : 2});
+                if (res.code === 1) { loadData(); }
+            }, 'json');
+        });
+    });
+
+    form.on('submit(submitEdit)', function (data) {
+        var index = layer.load(2);
+        var field = data.field;
+        var roleIds = [];
+        $('#editForm [name=role_ids]:checked').each(function () { roleIds.push($(this).val()); });
+        field.role_ids = roleIds;
+        $.post('/admin/save', field, function (res) {
+            layer.close(index);
+            if (res.code === 1) {
+                layer.msg(res.msg, {icon: 1});
+                setTimeout(function () { layer.closeAll(); loadData(); }, 500);
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+        return false;
+    });
+
+    $(document).on('click', '#cancelEdit', function () { layer.closeAll(); });
+    loadData();
+
+});
+</script>
+</body>
+</html>

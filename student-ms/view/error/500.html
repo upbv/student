@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>系统提示</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+    <style>
+        body { background: #eef0f4; }
+        .error-wrap {
+            width: 560px;
+            margin: 90px auto 0;
+            background: #fff;
+            border: 1px solid #e2e6ec;
+            border-radius: 3px;
+            padding: 40px 44px;
+            text-align: left;
+        }
+        .error-wrap .code {
+            font-size: 46px;
+            font-weight: 600;
+            color: #c45656;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        .error-wrap h1 {
+            font-size: 18px;
+            color: #333;
+            margin: 14px 0 10px;
+            font-weight: 600;
+        }
+        .error-wrap p {
+            font-size: 13px;
+            color: #6b7787;
+            line-height: 2;
+        }
+        .error-wrap .btns { margin-top: 24px; }
+    </style>
+</head>
+<body>
+<div class="error-wrap">
+    <div class="code">500</div>
+    <h1>系统处理请求时出现异常</h1>
+    <p>请稍后重试；如果问题持续出现，请联系系统管理员并说明操作步骤。</p>
+    <div class="btns">
+        <a class="layui-btn layui-btn-sm layui-btn-normal" href="/">返回控制台</a>
+        <a class="layui-btn layui-btn-sm layui-btn-primary" href="javascript:history.back();">返回上一页</a>
+    </div>
+</div>
+</body>
+</html>

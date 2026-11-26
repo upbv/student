@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>院系管理</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">院系管理</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>学生管理</span><span class="sep">/</span><em>院系管理</em></span>
+    </div>
+
+    <div class="search-box">
+        <form class="layui-form" lay-filter="searchForm" id="searchForm">
+            <div class="layui-row">
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">院系名称</label>
+                        <div class="layui-input-inline" style="width:200px;">
+                            <input type="text" name="keyword" placeholder="请输入院系名称" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="resetBtn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <button class="layui-btn layui-btn-sm" id="btnAdd"><i class="layui-icon layui-icon-add-1"></i> 新增院系</button>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:70px;">ID</th>
+                <th>院系名称</th>
+                <th style="width:130px;">院系代码</th>
+                <th style="width:120px;">负责人</th>
+                <th style="width:70px;">排序</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:150px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="dataPage" class="page-foot"></div>
+    </div>
+</div>
+
+<script type="text/html" id="editLayer">
+
+    <form class="layui-form" id="editForm" lay-filter="editForm">
+        <input type="hidden" name="id" id="fieldId">
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">院系名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="name" class="layui-input" lay-verify="required" lay-required placeholder="如：计算机信息学院">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">院系代码</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="code" class="layui-input" placeholder="选填">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">负责人</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="leader" class="layui-input" placeholder="选填">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">排序</label>
+                    <div class="layui-input-block">
+                        <input type="number" name="sort" class="layui-input" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">状态</label>
+                    <div class="layui-input-block">
+                        <select name="status">
+                            <option value="1">启用</option>
+                            <option value="0">停用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="submitEdit">保存</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="cancelEdit">取消</button>
+            </div>
+        </div>
+    </form>
+</script><script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer', 'laypage'], function () {
+    var form = layui.form, layer = layui.layer, laypage = layui.laypage, $ = layui.$;
+    var page = 1, limit = 15, rows = [];
+
+    function render(list, count) {
+        rows = list;
+        var html = '';
+        if (!list.length) {
+            html = '<tr><td colspan="7" class="empty-tip"><i class="layui-icon layui-icon-face-surprised"></i><br>暂无院系数据</td></tr>';
+        }
+        list.forEach(function (r) {
+            html += '<tr>' +
+                '<td>' + r.id + '</td>' +
+                '<td>' + r.name + '</td>' +
+                '<td>' + (r.code || '-') + '</td>' +
+                '<td>' + (r.leader || '-') + '</td>' +
+                '<td>' + r.sort + '</td>' +
+                '<td><span class="status-dot ' + (r.status == 1 ? 'status-on' : 'status-off') + '"></span>' + (r.status == 1 ? '启用' : '停用') + '</td>' +
+                '<td>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-warm" data-act="edit" data-id="' + r.id + '">编辑</a>' +
+                '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="delete" data-id="' + r.id + '">删除</a>' +
+                '</td></tr>';
+        });
+        $('#tableBody').html(html);
+
+        laypage.render({
+            elem: '#dataPage', count: count, limit: limit, curr: page,
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
+            }
+        });
+    }
+
+    function loadData() {
+        $.get('/department/list', $('#searchForm').serialize() + '&page=' + page + '&limit=' + limit, function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            render(res.data, res.count);
+        }, 'json');
+    }
+
+    form.on('submit(searchBtn)', function () { page = 1; loadData(); return false; });
+    $('#resetBtn').on('click', function () {
+        $('#searchForm')[0].reset(); form.render(null, 'searchForm'); page = 1; loadData();
+    });
+
+    $('#btnAdd').on('click', function () {
+        layer.open({
+            type: 1, title: '新增院系', content: $('#editLayer').html(), area: ['640px', '420px'],
+            success: function () { form.render(null, 'editForm'); }
+        });
+    });
+
+    $('#tableBody').on('click', 'a[data-act]', function () {
+        var act = $(this).data('act'), id = $(this).data('id');
+        var row = rows.filter(function (d) { return d.id == id; })[0];
+        if (!row) { return; }
+
+        if (act === 'edit') {
+            layer.open({
+                type: 1, title: '编辑院系', content: $('#editLayer').html(), area: ['640px', '420px'],
+                success: function () {
+                    form.render(null, 'editForm');
+                    $('#fieldId').val(row.id);
+                    $('#editForm [name=name]').val(row.name);
+                    $('#editForm [name=code]').val(row.code);
+                    $('#editForm [name=leader]').val(row.leader);
+                    $('#editForm [name=sort]').val(row.sort);
+                    $('#editForm [name=status]').val(row.status);
+                    form.render(null, 'editForm');
+                }
+            });
+        } else if (act === 'delete') {
+            layer.confirm('确定删除院系「' + row.name + '」吗？', function (index) {
+                layer.close(index);
+                $.post('/department/delete', {id: id}, function (res) {
+                    layer.msg(res.code === 1 ? '删除成功' : res.msg, {icon: res.code === 1 ? 1 : 2});
+                    if (res.code === 1) { loadData(); }
+                }, 'json');
+            });
+        }
+    });
+
+    form.on('submit(submitEdit)', function (data) {
+        var index = layer.load(2);
+        $.post('/department/save', data.field, function (res) {
+            layer.close(index);
+            if (res.code === 1) {
+                layer.msg(res.msg, {icon: 1});
+                setTimeout(function () { layer.closeAll(); loadData(); }, 500);
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+        return false;
+    });
+
+    $(document).on('click', '#cancelEdit', function () { layer.closeAll(); });
+    loadData();
+});
+</script>
+</body>
+</html>

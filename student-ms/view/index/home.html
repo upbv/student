@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>控制台</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">控制台</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><em>控制台</em></span>
+    </div>
+
+    <!-- 数据概览 -->
+    <div class="panel-grid">
+        <div class="panel-card link" data-url="/student">
+            <i class="layui-icon layui-icon-user icon"></i>
+            <div class="num" id="numStudent">-</div>
+            <div class="label">在册学生</div>
+        </div>
+        <div class="panel-card link" data-url="/class">
+            <i class="layui-icon layui-icon-group icon"></i>
+            <div class="num" id="numClass">-</div>
+            <div class="label">班级</div>
+        </div>
+        <div class="panel-card link" data-url="/course">
+            <i class="layui-icon layui-icon-template icon"></i>
+            <div class="num" id="numCourse">-</div>
+            <div class="label">开设课程</div>
+        </div>
+        <div class="panel-card link" data-url="/teacher">
+            <i class="layui-icon layui-icon-avatar icon"></i>
+            <div class="num" id="numTeacher">-</div>
+            <div class="label">授课教师</div>
+        </div>
+        <div class="panel-card">
+            <i class="layui-icon layui-icon-username icon"></i>
+            <div class="num" id="numAdmin">-</div>
+            <div class="label">系统账号</div>
+        </div>
+        <div class="panel-card">
+            <i class="layui-icon layui-icon-log icon"></i>
+            <div class="num" id="numLogin">-</div>
+            <div class="label">近七日登录次数</div>
+        </div>
+    </div>
+
+    <div class="layui-row layui-col-space8">
+        <div class="layui-col-md8">
+            <div class="table-box" style="margin-bottom:8px;">
+                <div class="panel-title">
+                    <span>课程成绩概览</span>
+                    <span class="more" data-url="/score">成绩管理 &gt;</span>
+                </div>
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                    <tr>
+                        <th>课程名称</th>
+                        <th style="width:80px;">平均分</th>
+                        <th style="width:70px;">最高</th>
+                        <th style="width:70px;">最低</th>
+                        <th style="width:70px;">人数</th>
+                        <th style="width:32%;">平均分分布</th>
+                    </tr>
+                    </thead>
+                    <tbody id="courseStatBody"></tbody>
+                </table>
+            </div>
+
+            <div class="table-box">
+                <div class="panel-title">
+                    <span>班级人数</span>
+                    <span class="more" data-url="/class">班级管理 &gt;</span>
+                </div>
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                    <tr>
+                        <th>班级名称</th>
+                        <th style="width:90px;">人数</th>
+                        <th style="width:55%;">占比</th>
+                    </tr>
+                    </thead>
+                    <tbody id="classStatBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="layui-col-md4">
+            <div class="table-box" style="margin-bottom:8px;">
+                <div class="panel-title">
+                    <span>最近登录</span>
+                    <span class="more" data-url="/loginlog">登录日志 &gt;</span>
+                </div>
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                    <tr>
+                        <th>账号</th>
+                        <th style="width:80px;">结果</th>
+                        <th style="width:120px;">时间</th>
+                    </tr>
+                    </thead>
+                    <tbody id="recentLoginBody"></tbody>
+                </table>
+            </div>
+
+            <div class="table-box">
+                <div class="panel-title"><span>常用操作</span></div>
+                <div style="padding:4px 0 6px;">
+                    <a class="layui-btn layui-btn-sm layui-btn-normal" data-url="/student">学生名单</a>
+                    <a class="layui-btn layui-btn-sm layui-btn-primary" data-url="/score">成绩录入</a>
+                    <a class="layui-btn layui-btn-sm layui-btn-primary" data-url="/select">选课办理</a>
+                    <a class="layui-btn layui-btn-sm layui-btn-primary" data-url="/operationlog">操作日志</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['layer'], function () {
+    var layer = layui.layer;
+    var $ = layui.$;
+
+    // 卡片与快捷入口跳转（在 iframe 内直接切换地址）
+    $('.panel-card.link, .panel-title .more, .layui-btn[data-url]').on('click', function () {
+        var url = $(this).data('url');
+        if (url) {
+            window.location.href = url;
+        }
+    });
+
+    $.get('/dashboard/data', function (res) {
+        if (res.code !== 1) {
+            layer.msg('数据加载失败', {icon: 2});
+            return;
+        }
+        var d = res.data;
+        $('#numStudent').text(d.student);
+        $('#numClass').text(d.class);
+        $('#numCourse').text(d.course);
+        $('#numTeacher').text(d.teacher);
+        $('#numAdmin').text(d.admin);
+        $('#numLogin').text(d.login7);
+
+        // 课程成绩概览
+        var cHtml = '';
+        d.courseStat.forEach(function (item) {
+            var avg = parseFloat(item.avg_score) || 0;
+            cHtml += '<tr>' +
+                '<td>' + item.name + '</td>' +
+                '<td>' + item.avg_score + '</td>' +
+                '<td>' + item.max_score + '</td>' +
+                '<td>' + item.min_score + '</td>' +
+                '<td>' + item.total + '</td>' +
+                '<td><div class="bar-track"><div class="bar-fill" style="width:' + Math.min(avg, 100) + '%;"></div></div></td>' +
+                '</tr>';
+        });
+        $('#courseStatBody').html(cHtml || '<tr><td colspan="6" class="empty-tip">暂无成绩数据</td></tr>');
+
+        // 班级人数
+        var maxNum = 1;
+        d.classStat.forEach(function (item) { if (item.total > maxNum) maxNum = item.total; });
+        var html = '';
+        d.classStat.forEach(function (item) {
+            var percent = Math.round(item.total / maxNum * 100);
+            html += '<tr>' +
+                '<td>' + item.name + '</td>' +
+                '<td>' + item.total + '</td>' +
+                '<td><div class="bar-track"><div class="bar-fill" style="width:' + percent + '%;"></div></div></td>' +
+                '</tr>';
+        });
+        $('#classStatBody').html(html || '<tr><td colspan="3" class="empty-tip">暂无班级数据</td></tr>');
+
+        // 最近登录
+        var lHtml = '';
+        d.recentLogin.forEach(function (item) {
+            lHtml += '<tr>' +
+                '<td>' + (item.username || '-') + '</td>' +
+                '<td><span class="status-dot ' + (item.status == 1 ? 'status-on' : 'status-off') + '"></span>' + item.status_text + '</td>' +
+                '<td>' + item.login_time + '</td>' +
+                '</tr>';
+        });
+        $('#recentLoginBody').html(lHtml || '<tr><td colspan="3" class="empty-tip">暂无登录记录</td></tr>');
+    }, 'json');
+});
+</script>
+</body>
+</html>

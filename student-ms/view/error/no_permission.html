@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>无权访问</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f2f4f7;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+        }
+        .err-box {
+            width: 420px;
+            background: #fff;
+            border-radius: 6px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 21, 41, .08);
+        }
+        .err-box .icon {
+            font-size: 56px;
+            color: #ff5722;
+        }
+        .err-box h2 {
+            font-size: 18px;
+            color: #495468;
+            margin: 14px 0 8px;
+            font-weight: 600;
+        }
+        .err-box p {
+            font-size: 13px;
+            color: #8a94a6;
+            margin: 0 0 24px;
+        }
+    </style>
+</head>
+<body>
+<div class="err-box">
+    <i class="layui-icon layui-icon-auz icon"></i>
+    <h2>没有访问权限</h2>
+    <p>{$msg}</p>
+    <a href="/index/index" class="layui-btn layui-btn-sm layui-btn-normal">返回首页</a>
+</div>
+</body>
+</html>

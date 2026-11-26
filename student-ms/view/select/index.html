@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>选课管理</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">选课管理</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>教务管理</span><span class="sep">/</span><em>选课管理</em></span>
+    </div>
+
+    <div class="search-box">
+        <form class="layui-form" lay-filter="searchForm" id="searchForm">
+            <div class="layui-row">
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">关键字</label>
+                        <div class="layui-input-inline" style="width:190px;">
+                            <input type="text" name="keyword" placeholder="学号 / 姓名 / 课程" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">课程</label>
+                        <div class="layui-input-inline" style="width:180px;">
+                            <select name="course_id">
+                                <option value="">全部课程</option>
+                                {volist name="courses" id="vo"}
+                                <option value="{$vo.id}">{$vo.name}</option>
+                                {/volist}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">学期</label>
+                        <div class="layui-input-inline" style="width:160px;">
+                            <input type="text" name="semester" placeholder="如：2024-2025-1" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="resetBtn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <button class="layui-btn layui-btn-sm" id="btnAdd"><i class="layui-icon layui-icon-add-1"></i> 办理选课</button>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:70px;">ID</th>
+                <th style="width:110px;">学号</th>
+                <th style="width:100px;">姓名</th>
+                <th>课程名称</th>
+                <th style="width:70px;">学分</th>
+                <th style="width:130px;">学期</th>
+                <th style="width:90px;">成绩</th>
+                <th style="width:90px;">等级</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:100px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="dataPage" class="page-foot"></div>
+    </div>
+</div>
+
+<!-- 选课弹层 -->
+<script type="text/html" id="addLayer">
+
+    <form class="layui-form" id="addForm" lay-filter="addForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择学生</label>
+            <div class="layui-input-block">
+                <select name="student_id" id="studentSelect" lay-search lay-filter="studentSelect">
+                    <option value="">请选择学生</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择课程</label>
+            <div class="layui-input-block">
+                <select name="course_id" id="courseSelect" lay-search>
+                    <option value="">请选择课程</option>
+                    {volist name="courses" id="vo"}
+                    <option value="{$vo.id}">{$vo.name}（{$vo.credit} 学分）</option>
+                    {/volist}
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="submitAdd">确认选课</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="cancelAdd">取消</button>
+            </div>
+        </div>
+    </form>
+</script>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer', 'laypage'], function () {
+    var form = layui.form, layer = layui.layer, laypage = layui.laypage, $ = layui.$;
+    var page = 1, limit = 15;
+
+    function render(list, count) {
+        var html = '';
+        if (!list.length) {
+            html = '<tr><td colspan="10" class="empty-tip"><i class="layui-icon layui-icon-face-surprised"></i><br>暂无选课记录</td></tr>';
+        }
+        list.forEach(function (r) {
+            html += '<tr>' +
+                '<td>' + r.id + '</td>' +
+                '<td>' + r.student_no + '</td>' +
+                '<td>' + r.student_name + '</td>' +
+                '<td>' + r.course_name + '</td>' +
+                '<td>' + r.credit + '</td>' +
+                '<td>' + r.semester + '</td>' +
+                '<td>' + (r.score === null ? '-' : r.score) + '</td>' +
+                '<td>' + r.level + '</td>' +
+                '<td><span class="status-dot ' + (r.status == 1 ? 'status-on' : 'status-off') + '"></span>' + (r.status == 1 ? '已选' : '已退') + '</td>' +
+                '<td>' +
+                (r.status == 1
+                    ? '<a class="layui-btn layui-btn-xs layui-btn-danger" data-act="drop" data-id="' + r.id + '">退课</a>'
+                    : '<span style="color:#a4adbd;">已退课</span>') +
+                '</td></tr>';
+        });
+        $('#tableBody').html(html);
+
+        laypage.render({
+            elem: '#dataPage', count: count, limit: limit, curr: page,
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
+            }
+        });
+    }
+
+    function loadData() {
+        $.get('/select/list', $('#searchForm').serialize() + '&page=' + page + '&limit=' + limit, function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            render(res.data, res.count);
+        }, 'json');
+    }
+
+    // 加载可选学生
+    function loadStudents(keyword) {
+        $.get('/student/options', {keyword: keyword || ''}, function (res) {
+            if (res.code !== 1) { return; }
+            var html = '<option value="">请选择学生</option>';
+            res.data.forEach(function (s) {
+                html += '<option value="' + s.id + '">' + s.label + '</option>';
+            });
+            $('#studentSelect').html(html);
+            form.render('select');
+        }, 'json');
+    }
+
+    form.on('submit(searchBtn)', function () { page = 1; loadData(); return false; });
+    $('#resetBtn').on('click', function () {
+        $('#searchForm')[0].reset(); form.render(null, 'searchForm'); page = 1; loadData();
+    });
+
+    $('#btnAdd').on('click', function () {
+        layer.open({
+            type: 1, title: '办理选课', content: $('#addLayer').html(), area: ['560px', '320px'],
+            success: function () {
+                form.render(null, 'addForm');
+                loadStudents('');
+            }
+        });
+    });
+
+    $('#tableBody').on('click', 'a[data-act]', function () {
+        if ($(this).data('act') !== 'drop') { return; }
+        var id = $(this).data('id');
+        layer.confirm('确定办理退课吗？退课后该门课程成绩将不再计入统计。', function (index) {
+            layer.close(index);
+            $.post('/select/delete', {id: id}, function (res) {
+                layer.msg(res.code === 1 ? '退课成功' : res.msg, {icon: res.code === 1 ? 1 : 2});
+                if (res.code === 1) { loadData(); }
+            }, 'json');
+        });
+    });
+
+    form.on('submit(submitAdd)', function (data) {
+        var index = layer.load(2);
+        $.post('/select/save', data.field, function (res) {
+            layer.close(index);
+            if (res.code === 1) {
+                layer.msg(res.msg, {icon: 1});
+                setTimeout(function () { layer.closeAll(); loadData(); }, 500);
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+        return false;
+    });
+
+    $(document).on('click', '#cancelAdd', function () { layer.closeAll(); });
+    loadData();
+});
+</script>
+</body>
+</html>
