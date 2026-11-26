@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>我的学生</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">我的学生</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>教务管理</span><span class="sep">/</span><em>我的学生</em></span>
+    </div>
+
+    <div class="search-box">
+        <form class="layui-form" lay-filter="searchForm" id="searchForm">
+            <div class="layui-row">
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">关键字</label>
+                        <div class="layui-input-inline" style="width:190px;">
+                            <input type="text" name="keyword" placeholder="学号 / 姓名" class="layui-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-md4">
+                    <div class="layui-form-item">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="searchBtn">查询</button>
+                        <button type="button" class="layui-btn layui-btn-primary" id="resetBtn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <span style="font-size:12px;color:#9C988F;">列表包含选修本人课程的学生，以及本人担任班主任的班级学生。</span>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:120px;">学号</th>
+                <th style="width:90px;">姓名</th>
+                <th style="width:70px;">性别</th>
+                <th style="width:160px;">班级</th>
+                <th style="width:130px;">联系电话</th>
+                <th style="width:120px;">本人课程数</th>
+                <th>学籍状态</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="dataPage" class="page-foot"></div>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer', 'laypage'], function () {
+    var form = layui.form, layer = layui.layer, laypage = layui.laypage, $ = layui.$;
+    var page = 1, limit = 15;
+
+    function render(list, count) {
+        var html = '';
+        if (!list.length) {
+            html = '<tr><td colspan="7" class="empty-tip">暂无学生</td></tr>';
+        }
+        list.forEach(function (r) {
+            html += '<tr>' +
+                '<td>' + r.student_no + '</td>' +
+                '<td>' + r.name + '</td>' +
+                '<td>' + r.gender_text + '</td>' +
+                '<td>' + r.class_name + '</td>' +
+                '<td>' + (r.phone || '-') + '</td>' +
+                '<td>' + r.course_count + '</td>' +
+                '<td>' + r.status_text + '</td>' +
+                '</tr>';
+        });
+        $('#tableBody').html(html);
+
+        laypage.render({
+            elem: 'dataPage', count: count, limit: limit, curr: page,
+            layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+            jump: function (obj, first) {
+                if (!first) { page = obj.curr; limit = obj.limit; loadData(); }
+            }
+        });
+    }
+
+    function loadData() {
+        $.get('/mystudents/list', $('#searchForm').serialize() + '&page=' + page + '&limit=' + limit, function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            render(res.data, res.count);
+        }, 'json');
+    }
+
+    form.on('submit(searchBtn)', function () { page = 1; loadData(); return false; });
+    $('#resetBtn').on('click', function () {
+        $('#searchForm')[0].reset(); form.render(null, 'searchForm'); page = 1; loadData();
+    });
+
+    loadData();
+});
+</script>
+</body>
+</html>

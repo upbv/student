@@ -163,7 +163,7 @@ def build():
         "权限划分与操作留痕是教务数据安全的基本要求",
     ], size=14.5, gap=1.05)
     # 右侧关键数字
-    stats = [("13", "张数据表"), ("12", "个功能模块"), ("3", "类用户角色"), ("21", "个测试用例")]
+    stats = [("15", "张数据表"), ("14", "个功能模块"), ("5", "类用户角色"), ("25", "个测试用例")]
     for i, (num, label) in enumerate(stats):
         y = Inches(1.85 + i * 1.22)
         rect(s, Inches(8.2), y, Inches(3.9), Inches(1.0), ACCENT_LIGHT)
@@ -179,17 +179,19 @@ def build():
     text(s, Inches(1.1), Inches(1.45), Inches(5), Inches(0.4),
          "三类用户角色", size=15, bold=True, color=ACCENT)
     roles = [
-        ("超级管理员", "账号、角色、权限维护；院系班级等基础数据"),
+        ("超级管理员", "账号、角色、权限维护；全校数据总览"),
         ("教务管理员", "学生、班级、课程维护；选课办理与成绩管理"),
-        ("教师", "查看学生名单；录入所授课程成绩"),
+        ("辅导员", "请假审批、资助管理，学生事务工作台"),
+        ("教师", "本人授课、相关学生与成绩录入"),
+        ("学生", "本人课程成绩、请假申请与资助查询"),
     ]
     for i, (name, desc) in enumerate(roles):
-        y = Inches(1.95 + i * 1.45)
-        rect(s, Inches(1.1), y, Inches(5.0), Inches(1.15), ACCENT_LIGHT)
-        text(s, Inches(1.35), y + Inches(0.16), Inches(4.5), Inches(0.4),
-             name, size=16, bold=True)
-        text(s, Inches(1.35), y + Inches(0.62), Inches(4.5), Inches(0.4),
-             desc, size=11.5, color=GREY)
+        y = Inches(1.82 + i * 1.06)
+        rect(s, Inches(1.1), y, Inches(5.0), Inches(0.92), ACCENT_LIGHT)
+        text(s, Inches(1.32), y + Inches(0.12), Inches(4.6), Inches(0.35),
+             name, size=14.5, bold=True)
+        text(s, Inches(1.32), y + Inches(0.5), Inches(4.6), Inches(0.35),
+             desc, size=10.5, color=GREY)
 
     picture_fit(s, os.path.join(FIG, "modules.png"),
                 Inches(6.5), Inches(1.55), Inches(6.1), Inches(5.3))
@@ -246,7 +248,7 @@ def build():
     groups = [
         ("权限体系", "账号、角色、权限、账号角色、角色权限 5 张表"),
         ("基础数据", "院系、班级、教师、课程 4 张表"),
-        ("业务数据", "学生、选课（含成绩）2 张表"),
+        ("业务数据", "学生、选课（含成绩）、请假、资助 4 张表"),
         ("审计数据", "登录日志、操作日志 2 张表"),
     ]
     for i, (name, desc) in enumerate(groups):
@@ -288,6 +290,22 @@ def build():
     text(s, Inches(1.0), Inches(6.72), Inches(11.4), Inches(0.3),
          "图 后台主界面：左侧导航按角色动态生成，右侧多标签页工作区", size=10,
          color=GREY, align=PP_ALIGN.CENTER)
+
+    # ---------------------------------------------------------------- 角色化工作台
+    page += 1
+    s = add_slide(prs)
+    header(s, "角色化工作台", page, "04 · 系统实现")
+    picture_fit(s, os.path.join(FIG, "student_panel.png"),
+                Inches(0.9), Inches(1.5), Inches(8.0), Inches(5.15))
+    text(s, Inches(0.9), Inches(6.72), Inches(8.0), Inches(0.3),
+         "图 学生工作台：本人课程、成绩、请假与资助", size=10, color=GREY, align=PP_ALIGN.CENTER)
+    bullet_block(s, Inches(9.2), Inches(1.6), Inches(3.7), [
+        "管理员：全校数据总览与系统维护",
+        "教务管理员：学籍、课程与成绩管理",
+        "辅导员：请假审批、资助管理",
+        "教师：本人课程、学生与成绩录入",
+        "学生：本人成绩、请假与资助",
+    ], size=11.5, gap=0.85)
 
     # ---------------------------------------------------------------- 08 学生管理
     page += 1
@@ -345,14 +363,15 @@ def build():
     data = [
         ("登录权限", "8 个用例", "错误密码、锁定、未登录跳转、越权拦截均已验证"),
         ("业务功能", "13 个用例", "增删改查、重复校验、批量操作、统计导出均已验证"),
-        ("问题修复", "3 项", "班级人数同步、批量成绩匹配、多标签页布局"),
+        ("角色数据范围", "4 个用例", "学生仅见本人数据，教师仅见本人课程，辅导员可审批请假"),
+        ("问题修复", "3 项", "班级人数同步、批量成绩匹配、多标签页布局已修复"),
     ]
     for i, (name, count, desc) in enumerate(data):
-        y = Inches(2.1 + i * 1.55)
-        text(s, Inches(1.1), y, Inches(1.9), Inches(0.5), name, size=18, bold=True, color=ACCENT)
-        text(s, Inches(3.1), y + Inches(0.03), Inches(1.5), Inches(0.5), count, size=15)
-        text(s, Inches(4.9), y + Inches(0.05), Inches(7.4), Inches(0.6), desc, size=13, color=GREY)
-        line(s, Inches(1.1), y + Inches(1.05), Inches(12.3), y + Inches(1.05))
+        y = Inches(1.95 + i * 1.28)
+        text(s, Inches(1.1), y, Inches(2.0), Inches(0.5), name, size=17, bold=True, color=ACCENT)
+        text(s, Inches(3.2), y + Inches(0.03), Inches(1.5), Inches(0.5), count, size=14)
+        text(s, Inches(5.0), y + Inches(0.05), Inches(7.3), Inches(0.6), desc, size=12.5, color=GREY)
+        line(s, Inches(1.1), y + Inches(0.95), Inches(12.3), y + Inches(0.95))
 
     # ---------------------------------------------------------------- 12 部署
     page += 1
@@ -382,13 +401,14 @@ def build():
     header(s, "总结与展望", page, "06 · 总结")
     text(s, Inches(1.1), Inches(1.5), Inches(5.2), Inches(0.4),
          "完成情况", size=16, bold=True, color=ACCENT)
-    bullet_block(s, Inches(1.1), Inches(2.0), Inches(5.2), [
-        "完成 12 个功能模块与 13 张数据表设计",
+    bullet_block(s, Inches(1.1), Inches(1.95), Inches(5.2), [
+        "完成 14 个功能模块与 15 张数据表设计",
         "实现 RBAC 菜单与接口两级权限控制",
+        "五类角色差异化工作台与数据范围",
         "登录日志与操作日志完整留痕",
         "Docker Compose 一键部署",
         "论文、任务记录、PPT、源代码齐全",
-    ], size=13, gap=0.9)
+    ], size=12.5, gap=0.8)
     text(s, Inches(7.0), Inches(1.5), Inches(5.2), Inches(0.4),
          "后续改进", size=16, bold=True, color=ACCENT)
     bullet_block(s, Inches(7.0), Inches(2.0), Inches(5.2), [

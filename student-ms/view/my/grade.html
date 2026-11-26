@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>我的成绩</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">我的成绩</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>学生服务</span><span class="sep">/</span><em>我的成绩</em></span>
+    </div>
+
+    <div class="panel-grid">
+        <div class="panel-card">
+            <div class="num" id="statCourse">-</div>
+            <div class="label">在修课程</div>
+        </div>
+        <div class="panel-card">
+            <div class="num" id="statCredit">-</div>
+            <div class="label">已修学分</div>
+        </div>
+        <div class="panel-card">
+            <div class="num" id="statAvg">-</div>
+            <div class="label">平均成绩</div>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <table class="layui-table" lay-size="sm">
+            <thead>
+            <tr>
+                <th>课程名称</th>
+                <th style="width:70px;">学分</th>
+                <th style="width:110px;">任课教师</th>
+                <th style="width:120px;">学期</th>
+                <th style="width:80px;">成绩</th>
+                <th style="width:80px;">等级</th>
+                <th style="width:80px;">状态</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['layer'], function () {
+    var layer = layui.layer, $ = layui.$;
+
+    $.get('/mygrade/list', function (res) {
+        if (res.code !== 1) { layer.msg('数据加载失败', {icon: 2}); return; }
+        var d = res.data, s = d.stats;
+        $('#statCourse').text(s.courseCount);
+        $('#statCredit').text(s.creditTotal);
+        $('#statAvg').text(s.avgScore);
+
+        var html = '';
+        d.list.forEach(function (r) {
+            html += '<tr>' +
+                '<td>' + r.course_name + '</td>' +
+                '<td>' + r.credit + '</td>' +
+                '<td>' + (r.teacher_name || '-') + '</td>' +
+                '<td>' + r.semester + '</td>' +
+                '<td>' + (r.score === null ? '<span style="color:#9C988F">未录入</span>' : r.score) + '</td>' +
+                '<td>' + r.level + '</td>' +
+                '<td><span class="status-dot ' + (r.status == 1 ? 'status-on' : 'status-off') + '"></span>' + r.status_text + '</td>' +
+                '</tr>';
+        });
+        $('#tableBody').html(html || '<tr><td colspan="7" class="empty-tip">暂无选课记录</td></tr>');
+    }, 'json');
+});
+</script>
+</body>
+</html>

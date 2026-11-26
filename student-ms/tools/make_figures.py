@@ -60,27 +60,30 @@ def arch():
 
 # ------------------------- 图3.2 功能结构 -------------------------
 def modules():
-    fig, ax = plt.subplots(figsize=(7.4, 4.6), dpi=200)
-    ax.set_xlim(0, 24); ax.set_ylim(0, 10); ax.axis("off")
+    fig, ax = plt.subplots(figsize=(8.0, 4.8), dpi=200)
+    ax.set_xlim(0, 25.2); ax.set_ylim(0, 10); ax.axis("off")
 
     box(ax, 9.6, 8.8, 4.8, 0.9, "学生管理系统", fs=10.5, lw=1.2)
     groups = [
-        ("系统管理", ["账号管理", "角色管理", "权限管理"], 1.2),
-        ("学生管理", ["学生列表", "班级管理", "院系管理", "教师管理"], 6.8),
-        ("教务管理", ["课程管理", "选课管理", "成绩管理"], 13.0),
-        ("日志管理", ["登录日志", "操作日志"], 19.2),
+        ("系统管理", ["账号管理", "角色管理", "权限管理"], 0.9),
+        ("学生管理", ["学生列表", "班级管理", "院系管理", "教师管理", "请假管理", "资助管理"], 6.5),
+        ("教务管理", ["课程管理", "选课管理", "成绩管理", "我的授课", "我的学生"], 12.1),
+        ("日志管理", ["登录日志", "操作日志"], 17.7),
+        ("学生服务", ["我的成绩", "我的请假", "我的资助"], 21.6),
     ]
-    centers = [x + 1.8 for _, _, x in groups]
+    centers = [x + 1.8 if i < 4 else x + 1.35 for i, (_, _, x) in enumerate(groups)]
     # 根节点到横向总线，再由总线分到各组
     line(ax, 12.0, 8.8, 12.0, 6.6, lw=0.7)
     line(ax, min(centers), 6.6, max(centers), 6.6, lw=0.7)
-    for name, children, x in groups:
-        box(ax, x, 5.4, 3.6, 0.9, name, fs=9.5)
-        line(ax, x + 1.8, 6.6, x + 1.8, 6.3, lw=0.7)
+    for idx, (name, children, x) in enumerate(groups):
+        w = 3.6 if idx < 4 else 2.7
+        box(ax, x, 5.4, w, 0.9, name, fs=9 if idx < 4 else 8.5)
+        cx = x + w / 2
+        line(ax, cx, 6.6, cx, 6.3, lw=0.7)
         for i, c in enumerate(children):
-            y = 4.0 - i * 1.05
-            box(ax, x + 0.35, y, 2.9, 0.72, c, fs=8.5)
-            line(ax, x + 1.8, 5.4, x + 1.8, y + 0.72, lw=0.6, style=":")
+            y = 4.35 - i * 0.74
+            box(ax, x + 0.2, y, w - 0.4, 0.6, c, fs=7.6)
+            line(ax, cx, 5.4, cx, y + 0.6, lw=0.5, style=":")
     fig.savefig(os.path.join(OUT, "modules.png"), bbox_inches="tight")
     plt.close(fig)
 

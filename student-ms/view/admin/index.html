@@ -156,6 +156,32 @@
             </div>
             <div class="layui-col-md6">
                 <div class="layui-form-item">
+                    <label class="layui-form-label">关联学生</label>
+                    <div class="layui-input-block">
+                        <select name="student_id" lay-search>
+                            <option value="0">不关联</option>
+                            {volist name="students" id="vo"}
+                            <option value="{$vo.id}">{$vo.student_no} {$vo.name}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">关联教师</label>
+                    <div class="layui-input-block">
+                        <select name="teacher_id" lay-search>
+                            <option value="0">不关联</option>
+                            {volist name="teachers" id="vo"}
+                            <option value="{$vo.id}">{$vo.teacher_no} {$vo.name}</option>
+                            {/volist}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
                     <label class="layui-form-label">账号状态</label>
                     <div class="layui-input-block">
                         <select name="status">
@@ -260,6 +286,8 @@ layui.use(['form', 'layer', 'laypage'], function () {
                     $('#editForm [name=phone]').val(row.phone);
                     $('#editForm [name=email]').val(row.email);
                     $('#editForm [name=status]').val(row.status);
+                    $('#editForm [name=student_id]').val(row.student_id || 0);
+                    $('#editForm [name=teacher_id]').val(row.teacher_id || 0);
                     var ids = row.role_ids || [];
                     $('#editForm [name=role_ids]').each(function () {
                         $(this).prop('checked', ids.indexOf(parseInt($(this).val(), 10)) >= 0);

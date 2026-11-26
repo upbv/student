@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>我的资助</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">我的资助</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>学生服务</span><span class="sep">/</span><em>我的资助</em></span>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <span style="font-size:12px;color:#9C988F;">资助记录由辅导员统一维护，如有疑问请联系辅导员。</span>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:110px;">类型</th>
+                <th style="width:130px;">学期</th>
+                <th style="width:120px;">金额（元）</th>
+                <th style="width:100px;">状态</th>
+                <th>备注</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['layer'], function () {
+    var layer = layui.layer, $ = layui.$;
+    var statusCls = {0: 'status-warn', 1: 'status-on', 2: 'status-off'};
+
+    $.get('/myaid/list', function (res) {
+        if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+        var html = '';
+        res.data.forEach(function (r) {
+            html += '<tr>' +
+                '<td>' + r.type_text + '</td>' +
+                '<td>' + r.semester + '</td>' +
+                '<td>' + r.amount + '</td>' +
+                '<td><span class="status-dot ' + (statusCls[r.status] || '') + '"></span>' + r.status_text + '</td>' +
+                '<td>' + (r.remark || '-') + '</td>' +
+                '</tr>';
+        });
+        $('#tableBody').html(html || '<tr><td colspan="5" class="empty-tip">暂无资助记录</td></tr>');
+    }, 'json');
+});
+</script>
+</body>
+</html>

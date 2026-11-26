@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>我的请假</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/layui/admin.css">
+</head>
+<body>
+<div class="page-box">
+
+    <div class="page-head">
+        <span class="title">我的请假</span>
+        <span class="breadcrumb"><span>首页</span><span class="sep">/</span><span>学生服务</span><span class="sep">/</span><em>我的请假</em></span>
+    </div>
+
+    <div class="table-box">
+        <div class="tool-bar">
+            <button class="layui-btn layui-btn-sm" id="btnApply"><i class="layui-icon layui-icon-add-1"></i> 申请请假</button>
+            <span style="font-size:12px;color:#9C988F;">请假申请提交后由辅导员审批，审批结果会显示在下方列表。</span>
+        </div>
+        <table class="layui-table" lay-size="sm" style="margin-top:6px;">
+            <thead>
+            <tr>
+                <th style="width:70px;">类型</th>
+                <th style="width:190px;">起止日期</th>
+                <th style="width:70px;">天数</th>
+                <th>事由</th>
+                <th style="width:90px;">状态</th>
+                <th style="width:130px;">审批人</th>
+                <th>审批意见</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script type="text/html" id="applyLayer">
+    <form class="layui-form" id="applyForm" lay-filter="applyForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">请假类型</label>
+            <div class="layui-input-block">
+                <select name="type">
+                    <option value="1">事假</option>
+                    <option value="2">病假</option>
+                    <option value="3">其他</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">开始日期</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="start_date" class="layui-input" placeholder="yyyy-MM-dd" lay-verify="required" lay-required>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-md6">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">结束日期</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="end_date" class="layui-input" placeholder="yyyy-MM-dd" lay-verify="required" lay-required>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">请假事由</label>
+            <div class="layui-input-block">
+                <textarea name="reason" class="layui-textarea" style="height:90px;" lay-verify="required" lay-required placeholder="请说明请假原因"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="submitApply">提交申请</button>
+                <button type="button" class="layui-btn layui-btn-primary" id="cancelApply">取消</button>
+            </div>
+        </div>
+    </form>
+</script>
+
+<script src="/static/layui/jquery.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script>
+layui.use(['form', 'layer'], function () {
+    var form = layui.form, layer = layui.layer, $ = layui.$;
+    var statusCls = {0: 'status-warn', 1: 'status-on', 2: 'status-off'};
+
+    function loadData() {
+        $.get('/myleave/list', function (res) {
+            if (res.code !== 0) { layer.msg('数据加载失败', {icon: 2}); return; }
+            var html = '';
+            res.data.forEach(function (r) {
+                html += '<tr>' +
+                    '<td>' + r.type_text + '</td>' +
+                    '<td>' + r.start_date + ' ~ ' + r.end_date + '</td>' +
+                    '<td>' + r.days + '</td>' +
+                    '<td>' + r.reason + '</td>' +
+                    '<td><span class="status-dot ' + (statusCls[r.status] || '') + '"></span>' + r.status_text + '</td>' +
+                    '<td>' + (r.approver || '-') + '</td>' +
+                    '<td>' + (r.remark || '-') + '</td>' +
+                    '</tr>';
+            });
+            $('#tableBody').html(html || '<tr><td colspan="7" class="empty-tip">暂无请假记录</td></tr>');
+        }, 'json');
+    }
+
+    $('#btnApply').on('click', function () {
+        layer.open({
+            type: 1, title: '申请请假', content: $('#applyLayer').html(), area: ['560px', '430px'],
+            success: function () { form.render(null, 'applyForm'); }
+        });
+    });
+
+    form.on('submit(submitApply)', function (data) {
+        var index = layer.load(2);
+        $.post('/myleave/save', data.field, function (res) {
+            layer.close(index);
+            if (res.code === 1) {
+                layer.msg(res.msg, {icon: 1});
+                setTimeout(function () { layer.closeAll(); loadData(); }, 600);
+            } else {
+                layer.msg(res.msg, {icon: 2});
+            }
+        }, 'json');
+        return false;
+    });
+
+    $(document).on('click', '#cancelApply', function () { layer.closeAll(); });
+
+    loadData();
+});
+</script>
+</body>
+</html>
